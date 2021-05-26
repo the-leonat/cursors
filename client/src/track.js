@@ -2,7 +2,7 @@
 import xPath from "./lib/DOMPath";
 import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
-import usePersist from "./persist";
+import useStorage from "./storage";
 
 function getDimensions(el) {
     var rect = el.getBoundingClientRect(),
@@ -84,7 +84,7 @@ function useClock(tick, interval) {
     };
 }
 
-function useResourceId() {
+export function useResourceId() {
     // TODO: add nonce
     function hash() {
         return sha256(window.location.href || "").toString();
@@ -135,7 +135,7 @@ function trackCursor() {
     const { getTimePassed, resetTimePassed } = useTimePassed();
     const { getUserId, reset: resetUserId } = useUserId();
     const getResourceId = useResourceId();
-    const persist = usePersist();
+    const { persist } = useStorage();
     function tick() {
         const { resourceId, changed: resourceIdChanged } = getResourceId();
         const { xPath, relX, relY } = getRelativeMousePosition();
@@ -143,7 +143,7 @@ function trackCursor() {
             resetTimePassed();
             resetUserId();
         }
-        const timePassed = getTimePassed();
+        const timePassed = Math.floor(getTimePassed() / 2000);
         const userId = getUserId();
         persist(userId, resourceId, xPath, relX, relY, timePassed);
         console.log(xPath, relX, relY, timePassed, resourceId, userId);
