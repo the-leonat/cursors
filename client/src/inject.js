@@ -1,6 +1,14 @@
-import trackCursor, { useResourceId } from "./track";
+import trackCursor, { useResourceId, getDimensions } from "./track";
 import CircularBuffer from "circular-buffer";
 import useStorage from "./storage";
+import fastdom from "fastdom";
+import { useAnimationLoop } from "./view";
+import Cursor from "./Cursor";
+import useDeferedCallback from "./util";
+
+// todo convert to typescript
+// todo dont update position when cursor is only slightly different in position
+// move to offscreen canvas
 
 function injectHtml() {
     var div = document.createElement("div");
@@ -23,6 +31,8 @@ function useCursorData() {
 
     function reset() {
         frameBuffer = new CircularBuffer(CAPACITY);
+        lastLoadTime = 0;
+        nodeMap.clear();
     }
     reset();
 
@@ -82,10 +92,9 @@ function useCursorData() {
                 lastLoadTime,
                 lastLoadTime + diff
             );
-            result.forEach(({t, frame}) => frameBuffer.enq(processFrame(frame)));
-
-            console.log(frameBuffer);
-        } else {
+            result.forEach(({ t, frame }) =>
+                frameBuffer.enq(processFrame(frame))
+            );
         }
     }
 
@@ -98,26 +107,103 @@ function useCursorData() {
     };
 }
 
-function move() {
-    // if (subtime > time_step) {
-    //     from = buffer.dequeue
-    //     to = buffer.lastItem
-    //     subtime = subtime - timestep
-    // }
+function injectCanvas() {
+    const canvas = document.createElement("canvas");
+    canvas.style.position = "absolute";
+    canvas.style.top = 0;
+    canvas.style.right = 0;
+    canvas.style.width = "100vw";
+    canvas.style.minHeight = "100%";
+    canvas.style.pointerEvents = "none";
+    canvas.style.zIndex = 9999;
+    document.documentElement.style.height = "100%";
+    document.body.style.position = "relative";
+    document.body.style.minHeight = "100%";
+    document.body.appendChild(canvas);
+    function adjustCanvasSizeToWindowSize() {
+        canvas.height = document.body.offsetHeight;
+        canvas.width = document.body.offsetWidth;
+    }
+    window.addEventListener("resize", adjustCanvasSizeToWindowSize);
+    adjustCanvasSizeToWindowSize();
+    return canvas;
+}
 
-    // lerpp = subtime / time_step
+function getAbsolutePosition(node, relX, relY) {
+    if (!node) {
+        return undefined;
+    }
+    const { left, top, width, height } = getDimensions(node, false);
+    const absX = left + width * relX;
+    const absY = top + height * relY;
+    return {
+        x: absX,
+        y: absY,
+    };
+}
 
-    // from to , lerp subtime
+function getOrCreateCursorFromUserId(cursorMap, userId) {
+    let cursor = cursorMap.get(userId);
+    if (!cursor) {
+        cursor = new Cursor(0, 0);
+        cursorMap.set(userId, cursor);
+    }
+    return cursor;
+}
 
-    // time += delta
-    // subtime += delta
+function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
+    frame.forEach((entry) => {
+        const { userId, relX, relY, node } = entry;
+        if (!node) return;
+        const { x, y } = getAbsolutePosition(node, relX, relY);
+        const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
-    const { buffer } = useCursorData();
+        if (updateFromOnly) {
+            cursor.updatePositions(x,y);
+        } else {
+            cursor.moveTo(x, y, 60);
+        }
+    });
+}
 
-    const getResourceId = useResourceId();
-    let lastLoadTime = 0;
+function move(canvas) {
+    const { frameBuffer } = useCursorData();
+    const cx = canvas.getContext("2d");
+    const cursorMap = new Map();
 
-    const { resourceId, changed: resourceIdChanged } = getResourceId();
+    const { start, stop } = useAnimationLoop(animate, 30);
+    const { start: startFrame, stop: stopFrame } = useAnimationLoop(() => {
+        if (frameBuffer.size() === 0) return;
+        // currentFrame = frameBuffer.get(frameBuffer.size() - 2);
+        const currentFrame = frameBuffer.deq();
+        updateCursorPositions(currentFrame, cursorMap);
+        console.log("cf", currentFrame);
+    }, 0.5);
+
+    const updateCursorPositionsOnResize = useDeferedCallback(() => {
+        updateCursorPositions(currentFrame, cursorMap, true);
+        console.log("resize");
+    }, 500);
+    window.addEventListener("resize", updateCursorPositionsOnResize);
+
+    function clearCanvas() {
+        cx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    start();
+    startFrame();
+    clearCanvas();
+
+    function animate(delta) {
+        cursorMap.forEach((cursor) => {
+            const didUpdate = cursor.update(delta);
+            const { x, y, oldX, oldY } = cursor;
+            if (!didUpdate) return;
+            const p = 5;
+            cx.clearRect(oldX - p, oldY - p, 20 + p * 2, 20 + p * 2);
+            cx.fillRect(x, y, 20, 20);
+        });
+    }
 }
 
 (function () {
@@ -127,6 +213,7 @@ function move() {
     }
     window.injected = true;
     injectHtml();
-    move();
+    const canvas = injectCanvas();
+    move(canvas);
     // trackCursor();
 })();

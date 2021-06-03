@@ -4,13 +4,14 @@ import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
 import useStorage from "./storage";
 
-function getDimensions(el) {
-    var rect = el.getBoundingClientRect(),
+export function getDimensions(el, ignoreScrollPosition = false) {
+    // Todo: implement cache
+    const rect = el.getBoundingClientRect(),
         scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
         scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     return {
-        top: rect.top + scrollTop,
-        left: rect.left + scrollLeft,
+        top: ignoreScrollPosition ? rect.top : rect.top + scrollTop,
+        left: ignoreScrollPosition ? rect.left : rect.left + scrollLeft,
         width: rect.width,
         height: rect.height,
     };
