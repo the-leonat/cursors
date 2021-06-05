@@ -130,7 +130,7 @@ function injectCanvas() {
     const adjustCanvasSizeDefered = useDeferedCallback(adjustCanvasSize, 500);
 
     function adjustCanvasOnResize() {
-        canvas.style.visibility = "hidden";     
+        canvas.style.visibility = "hidden";
         adjustCanvasSizeDefered();
     }
     window.addEventListener("resize", adjustCanvasOnResize);
@@ -162,16 +162,18 @@ function getOrCreateCursorFromUserId(cursorMap, userId) {
 
 function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
     frame.forEach((entry) => {
-        const { userId, relX, relY, node } = entry;
-        if (!node) return;
-        const { x, y } = getAbsolutePosition(node, relX, relY);
-        const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
+        fastdom.measure(() => {
+            const { userId, relX, relY, node } = entry;
+            if (!node) return;
+            const { x, y } = getAbsolutePosition(node, relX, relY);
+            const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
-        if (updateFromOnly) {
-            cursor.updatePositions(x, y);
-        } else {
-            cursor.moveTo(x, y, 120);
-        }
+            if (updateFromOnly) {
+                cursor.updatePositions(x, y);
+            } else {
+                cursor.moveTo(x, y, 120);
+            }
+        });
     });
 }
 
