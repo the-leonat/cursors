@@ -10,6 +10,10 @@ import useDeferedCallback, { getDocumentHeight } from "./util";
 // todo dont update position when cursor is only slightly different in position
 // move to offscreen canvas
 // bug cursor not included in the current frame cant update their position
+// useCursorData reset does not reset timer
+// send tracking info only if position changes
+// but also if not changing send every 10 seconds
+// hover over svg problem
 
 function injectHtml() {
     var div = document.createElement("div");
@@ -23,19 +27,25 @@ function injectHtml() {
 }
 
 function useCursorData() {
-    const CAPACITY = 100;
-    let frameBuffer;
-    let lastLoadTime = 0;
-    const { get: getCursorData } = useStorage();
+    const gFrameBufferCapacity = 100;
+    let gFrameBuffer;
+    let gLastLoadedFrameTime = 0;
+    let gLastFrameTimePerCursorDict = null;
+    let gLastFrameTime = null;
+    const gNodeMap = new Map();
+    const { getFrames, getLastFrameTimePerCursor } = useStorage();
     const getResourceId = useResourceId();
-    const nodeMap = new Map();
 
     function reset() {
-        frameBuffer = new CircularBuffer(CAPACITY);
-        lastLoadTime = 0;
-        nodeMap.clear();
+        gFrameBuffer = new CircularBuffer(gFrameBufferCapacity);
+        gLastLoadedFrameTime = 0;
+        gNodeMap.clear();
     }
     reset();
+
+    function getLastFrameTime() {
+        return gLastFrameTime;
+    }
 
     function lookupNode(xPath) {
         const result = document.evaluate(
@@ -49,28 +59,34 @@ function useCursorData() {
         if (!node) {
             console.log("node not found!!");
         } else {
-            nodeMap.set(xPath);
+            gNodeMap.set(xPath);
         }
         return node;
     }
 
-    function processFrame(frame) {
+    function processFrame(frame, frameTime) {
         // update nodemap
-        return frame.map((entry) => {
-            const { xPath } = entry;
-            let node;
-            if (!nodeMap.has(xPath)) {
-                node = lookupNode(xPath);
-                nodeMap.set(xPath, node);
-            } else {
-                node = nodeMap.get(xPath);
-            }
+        return {
+            frameTime,
+            lastFrame: frameTime >= gLastFrameTime,
+            entries: frame.map((entry) => {
+                const { xPath } = entry;
+                let node;
+                if (!gNodeMap.has(xPath)) {
+                    node = lookupNode(xPath);
+                    gNodeMap.set(xPath, node);
+                } else {
+                    node = gNodeMap.get(xPath);
+                }
 
-            return {
-                ...entry,
-                node,
-            };
-        });
+                return {
+                    ...entry,
+                    lastEntry:
+                        frameTime >= gLastFrameTimePerCursorDict[entry.userId],
+                    node,
+                };
+            }),
+        };
     }
 
     async function fillBuffer() {
@@ -79,31 +95,55 @@ function useCursorData() {
             reset();
         }
 
-        const bufferSize = frameBuffer.size();
-        const diff = CAPACITY - bufferSize;
-        console.log(`buffer is ${(bufferSize / CAPACITY) * 100}% full.`);
+        const emptyBufferSize = gFrameBufferCapacity - gFrameBuffer.size();
+        const loadFromFrameTime = gLastLoadedFrameTime;
+        const loadToFrameTime = gLastLoadedFrameTime + emptyBufferSize;
 
-        if (diff > CAPACITY * 0.25) {
+        if (loadToFrameTime <= gLastFrameTime) {
+            //rerun after 5 seconds
+            window.setTimeout(fillBuffer, 5000);
+        } else {
+            console.log("Framebuffer loaded all Frames");
+        }
+
+        if (emptyBufferSize > gFrameBufferCapacity * 0.25) {
             // only refill when 25 percent empty
             // buffer needs refill
             // network request
-            lastLoadTime += bufferSize;
-            const result = await getCursorData(
+            gLastLoadedFrameTime += gFrameBuffer.size();
+            const result = await getFrames(
                 resourceId,
-                lastLoadTime,
-                lastLoadTime + diff
+                loadFromFrameTime,
+                loadToFrameTime
             );
-            result.forEach(({ t, frame }) =>
-                frameBuffer.enq(processFrame(frame))
+            result.forEach(({ t: frameTime, frame }) =>
+                gFrameBuffer.enq(processFrame(frame, frameTime))
+            );
+            console.log(
+                `buffer is ${
+                    (gFrameBuffer.size() / gFrameBufferCapacity) * 100
+                }% full.`
             );
         }
     }
 
-    const intervalId = window.setInterval(fillBuffer, 5000);
+    async function start() {
+        const { resourceId } = getResourceId();
+        const { lastFrameTime, lastFrameTimePerCursorDict } =
+            await getLastFrameTimePerCursor(resourceId);
+        // update globals
+        console.log(lastFrameTime, lastFrameTimePerCursorDict);
+        gLastFrameTime = lastFrameTime;
+        gLastFrameTimePerCursorDict = lastFrameTimePerCursorDict;
+        fillBuffer();
+    }
+
+    start();
 
     return {
-        frameBuffer,
-        nodeMap,
+        frameBuffer: gFrameBuffer,
+        nodeMap: gNodeMap,
+        getLastFrameTime,
         reset,
     };
 }
@@ -163,8 +203,13 @@ function getOrCreateCursorFromUserId(cursorMap, userId) {
 function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
     frame.forEach((entry) => {
         fastdom.measure(() => {
-            const { userId, relX, relY, node } = entry;
+            const { userId, relX, relY, node, lastEntry } = entry;
             if (!node) return;
+            if (lastEntry) {
+                console.log("remove cursor", userId);
+                cursorMap.delete(userId);
+                return;
+            }
             const { x, y } = getAbsolutePosition(node, relX, relY);
             const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
@@ -178,26 +223,34 @@ function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
 }
 
 function move(canvas) {
-    const { frameBuffer } = useCursorData();
+    const { frameBuffer, getLastFrameTime } = useCursorData();
     const cx = canvas.getContext("2d");
     const cursorMap = new Map();
 
-    const { start, stop } = useAnimationLoop(animate, 60);
-    let currentFrame;
+    const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(animate, 60);
+    let gCurrentEntries;
+    let gIsLastFrame;
 
-    const { start: startFrame, stop: stopFrame } = useAnimationLoop(() => {
+    const { start: startFrameProcessing, stop: stopFrameProcessing } = useAnimationLoop(() => {
         if (frameBuffer.size() === 0) return;
-        // currentFrame = frameBuffer.get(frameBuffer.size() - 2);
-        currentFrame = frameBuffer.deq();
-        updateCursorPositions(currentFrame, cursorMap);
-        console.log("cf", currentFrame, canvas.width, canvas.height);
+        const { lastFrame, entries, frameTime } = frameBuffer.deq();
+        gCurrentEntries = entries;
+        gIsLastFrame = lastFrame;
+        console.log("process frame", frameTime);
+        updateCursorPositions(gCurrentEntries, cursorMap);
+        if (gIsLastFrame) {
+            gCurrentEntries = null;
+            console.log("end");
+            stopFrameProcessing();
+            stopAnimation();
+        }
     }, 0.5);
 
     const updateCursorPositionsOnResize = useDeferedCallback(() => {
-        if (!currentFrame) return;
-        console.log("update", currentFrame, canvas.width, canvas.height);
+        if (!gCurrentEntries) return;
+        console.log("update", gCurrentEntries, canvas.width, canvas.height);
 
-        updateCursorPositions(currentFrame, cursorMap, true);
+        updateCursorPositions(gCurrentEntries, cursorMap, true);
         console.log("resize");
     }, 600);
     window.addEventListener("resize", updateCursorPositionsOnResize);
@@ -206,8 +259,9 @@ function move(canvas) {
         cx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    start();
-    startFrame();
+    startAnimation();
+    startFrameProcessing();
+    // clear canvas once
     clearCanvas();
 
     function animate(delta) {

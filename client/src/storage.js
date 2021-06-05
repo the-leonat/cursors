@@ -20,14 +20,22 @@ export default function useStorage() {
         ]);
     }
 
-    async function get(resourceId, from, to) {
+    async function getLastFrameTimePerCursor(resourceId) {
         const { data, error } = await supabase
-            // .from("cursors")
-            // .select(`user_id, x, y, time, xpath`)
-            // .filter("resource_id", "eq", resourceId)
-            // .gte("time", from)
-            // .lt("time", to)
-            // .order("time");
+        .rpc("get_last_frame_time", {
+            _resource_id: resourceId,
+        });
+        console.log(data)
+
+        const { lastFrameTime, ...dict } = data[0];
+        return {
+            lastFrameTime,
+            lastFrameTimePerCursorDict: dict
+        }
+    }
+
+    async function getFrames(resourceId, from, to) {
+        const { data, error } = await supabase
             .rpc("get_frames", {
                 _resource_id: resourceId,
                 _from: from,
@@ -39,6 +47,7 @@ export default function useStorage() {
 
     return {
         persist,
-        get,
+        getFrames,
+        getLastFrameTimePerCursor
     };
 }

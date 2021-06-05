@@ -3,6 +3,7 @@ import xPath from "./lib/DOMPath";
 import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
 import useStorage from "./storage";
+import fastdom from "fastdom";
 
 export function getDimensions(el, ignoreScrollPosition = false) {
     // Todo: implement cache
@@ -22,19 +23,26 @@ function useRelativeMousePosition() {
     let currentMousePosition = {};
 
     function handleMouseOver(event) {
-        const { target: element, pageX: mouseX, pageY: mouseY } = event;
-        const { top: posY, left: posX, width, height } = getDimensions(element);
-        currentElement = {
-            xPath: xPath(element),
-            width,
-            height,
-            posX,
-            posY,
-        };
-        currentMousePosition = {
-            x: mouseX,
-            y: mouseY,
-        };
+        fastdom.measure(() => {
+            const { target: element, pageX: mouseX, pageY: mouseY } = event;
+            const {
+                top: posY,
+                left: posX,
+                width,
+                height,
+            } = getDimensions(element);
+            currentElement = {
+                xPath: xPath(element),
+                width,
+                height,
+                posX,
+                posY,
+            };
+            currentMousePosition = {
+                x: mouseX,
+                y: mouseY,
+            };
+        });
     }
 
     function getRelativeMousePosition() {
