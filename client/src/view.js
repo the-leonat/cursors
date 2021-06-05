@@ -2,6 +2,7 @@
 
 export function useAnimationLoop(runFunction, fps) {
     let stopNext, fpsInterval, then, elapsed;
+    const limit = fps !== 60;
 
     function start() {
         stopNext = false;
@@ -19,7 +20,7 @@ export function useAnimationLoop(runFunction, fps) {
         window.requestAnimationFrame(run);
 
         elapsed = now - then;
-        if (elapsed <= fpsInterval) return;
+        if (elapsed <= fpsInterval && limit) return;
         then = now - (elapsed % fpsInterval);
         const delta = elapsed / fpsInterval; 
         runFunction(delta);

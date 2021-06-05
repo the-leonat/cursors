@@ -18,6 +18,7 @@ export default class Cursor {
     t;
     duration;
     start = false;
+    shouldRender = false;
     constructor(x, y) {
         this.fromX = x;
         this.fromY = y;
@@ -38,8 +39,11 @@ export default class Cursor {
 
     // called every frame
     update(delta) {
-        if (!this.start) return;
-        if (this.t === 1) return false;
+        if (!this.start || this.t === 1) {
+            this.shouldRender = false;
+            return false;
+        }
+        this.shouldRender = true;
         this.saveOldPosition();
         this.t = clamp(this.t + (this.duration * delta));
         const easedT = easeInOut(this.t);
@@ -67,5 +71,16 @@ export default class Cursor {
         this.toY = Math.floor(_y);
         this.subX = this.toX - this.fromX;
         this.subY = this.toY - this.fromY;
+    }
+
+    renderClearCanvas(cx, force = false) {
+        if (!this.shouldRender && !force) return;
+        const p = 5;
+        cx.clearRect(this.oldX - p, this.oldY - p, 20 + p * 2, 20 + p * 2);
+    } 
+
+    renderDrawCanvas(cx, force = false) {
+        if (!this.shouldRender && !force) return;
+        cx.fillRect(this.x, this.y, 20, 20);
     }
 }

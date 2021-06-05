@@ -4,11 +4,12 @@ import useStorage from "./storage";
 import fastdom from "fastdom";
 import { useAnimationLoop } from "./view";
 import Cursor from "./Cursor";
-import useDeferedCallback from "./util";
+import useDeferedCallback, { getDocumentHeight } from "./util";
 
 // todo convert to typescript
 // todo dont update position when cursor is only slightly different in position
 // move to offscreen canvas
+// bug cursor not included in the current frame cant update their position
 
 function injectHtml() {
     var div = document.createElement("div");
@@ -120,12 +121,20 @@ function injectCanvas() {
     document.body.style.position = "relative";
     document.body.style.minHeight = "100%";
     document.body.appendChild(canvas);
-    function adjustCanvasSizeToWindowSize() {
-        canvas.height = document.body.offsetHeight;
+
+    function adjustCanvasSize() {
+        canvas.height = getDocumentHeight();
         canvas.width = document.body.offsetWidth;
+        canvas.style.visibility = "visible";
     }
-    window.addEventListener("resize", adjustCanvasSizeToWindowSize);
-    adjustCanvasSizeToWindowSize();
+    const adjustCanvasSizeDefered = useDeferedCallback(adjustCanvasSize, 500);
+
+    function adjustCanvasOnResize() {
+        canvas.style.visibility = "hidden";     
+        adjustCanvasSizeDefered();
+    }
+    window.addEventListener("resize", adjustCanvasOnResize);
+    adjustCanvasSize();
     return canvas;
 }
 
@@ -159,9 +168,9 @@ function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
         const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
         if (updateFromOnly) {
-            cursor.updatePositions(x,y);
+            cursor.updatePositions(x, y);
         } else {
-            cursor.moveTo(x, y, 60);
+            cursor.moveTo(x, y, 120);
         }
     });
 }
@@ -171,19 +180,24 @@ function move(canvas) {
     const cx = canvas.getContext("2d");
     const cursorMap = new Map();
 
-    const { start, stop } = useAnimationLoop(animate, 30);
+    const { start, stop } = useAnimationLoop(animate, 60);
+    let currentFrame;
+
     const { start: startFrame, stop: stopFrame } = useAnimationLoop(() => {
         if (frameBuffer.size() === 0) return;
         // currentFrame = frameBuffer.get(frameBuffer.size() - 2);
-        const currentFrame = frameBuffer.deq();
+        currentFrame = frameBuffer.deq();
         updateCursorPositions(currentFrame, cursorMap);
-        console.log("cf", currentFrame);
+        console.log("cf", currentFrame, canvas.width, canvas.height);
     }, 0.5);
 
     const updateCursorPositionsOnResize = useDeferedCallback(() => {
+        if (!currentFrame) return;
+        console.log("update", currentFrame, canvas.width, canvas.height);
+
         updateCursorPositions(currentFrame, cursorMap, true);
         console.log("resize");
-    }, 500);
+    }, 600);
     window.addEventListener("resize", updateCursorPositionsOnResize);
 
     function clearCanvas() {
@@ -196,12 +210,11 @@ function move(canvas) {
 
     function animate(delta) {
         cursorMap.forEach((cursor) => {
-            const didUpdate = cursor.update(delta);
-            const { x, y, oldX, oldY } = cursor;
-            if (!didUpdate) return;
-            const p = 5;
-            cx.clearRect(oldX - p, oldY - p, 20 + p * 2, 20 + p * 2);
-            cx.fillRect(x, y, 20, 20);
+            cursor.update(delta);
+            cursor.renderClearCanvas(cx);
+        });
+        cursorMap.forEach((cursor) => {
+            cursor.renderDrawCanvas(cx);
         });
     }
 }
