@@ -73,14 +73,17 @@ export default class Cursor {
         this.subY = this.toY - this.fromY;
     }
 
-    renderClearCanvas(cx, force = false) {
-        if (!this.shouldRender && !force) return;
-        const p = 5;
-        cx.clearRect(this.oldX - p, this.oldY - p, 20 + p * 2, 20 + p * 2);
+    renderClearCanvas(cx, cursorImage, force = false) {
+        if (!this.shouldRerender && !force) return;
+        const p = 2;
+        const w = cursorImage.width;
+        const h = cursorImage.height;
+        cx.clearRect(this.oldX - p, this.oldY - p, w + p * 2, h + p * 2);
     } 
 
-    renderDrawCanvas(cx, force = false) {
+    renderDrawCanvas(cx, cursorImage, force = false) {
         if (!this.shouldRender && !force) return;
-        cx.fillRect(this.x, this.y, 20, 20);
+        cx.drawImage(cursorImage, this.x, this.y);
+
     }
 }

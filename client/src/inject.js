@@ -5,6 +5,8 @@ import fastdom from "fastdom";
 import { useAnimationLoop } from "./view";
 import Cursor from "./Cursor";
 import useDeferedCallback, { getDocumentHeight } from "./util";
+import cursorImage from "data-url:./../assets/cursor.png";
+
 
 // todo convert to typescript
 // todo dont update position when cursor is only slightly different in position
@@ -223,29 +225,52 @@ function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
     });
 }
 
-function move(canvas) {
+function createCursorCanvas() {
+    return new Promise((resolve) => {
+        const offscreenCanvas = document.createElement("canvas");
+        const img = new Image();
+        console.log("cursorImage", cursorImage);
+        img.src = cursorImage; // can also be a remote URL e.g. http://
+        img.onload = function () {
+            offscreenCanvas.width = img.width;
+            offscreenCanvas.height = img.height;
+            console.log("Cursor canvas created with dimensions:", img.width, img.height)
+            offscreenCanvas.getContext("2d").drawImage(img, 0, 0);
+
+            resolve(offscreenCanvas);
+        };
+    });
+}
+
+async function move(canvas) {
     const { frameBuffer, getLastFrameTime } = useCursorData();
     const cx = canvas.getContext("2d");
     const cursorMap = new Map();
+    const cursorCanvas = await createCursorCanvas();
 
-    const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(animate, 60);
+
+    const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(
+        animate,
+        60
+    );
     let gCurrentEntries;
     let gIsLastFrame;
 
-    const { start: startFrameProcessing, stop: stopFrameProcessing } = useAnimationLoop(() => {
-        if (frameBuffer.size() === 0) return;
-        const { lastFrame, entries, frameTime } = frameBuffer.deq();
-        gCurrentEntries = entries;
-        gIsLastFrame = lastFrame;
-        console.log("process frame", frameTime);
-        updateCursorPositions(gCurrentEntries, cursorMap);
-        if (gIsLastFrame) {
-            gCurrentEntries = null;
-            console.log("end");
-            stopFrameProcessing();
-            stopAnimation();
-        }
-    }, 0.5);
+    const { start: startFrameProcessing, stop: stopFrameProcessing } =
+        useAnimationLoop(() => {
+            if (frameBuffer.size() === 0) return;
+            const { lastFrame, entries, frameTime } = frameBuffer.deq();
+            gCurrentEntries = entries;
+            gIsLastFrame = lastFrame;
+            console.log("process frame", frameTime);
+            updateCursorPositions(gCurrentEntries, cursorMap);
+            if (gIsLastFrame) {
+                gCurrentEntries = null;
+                console.log("end");
+                stopFrameProcessing();
+                stopAnimation();
+            }
+        }, 0.5);
 
     const updateCursorPositionsOnResize = useDeferedCallback(() => {
         if (!gCurrentEntries) return;
@@ -268,10 +293,10 @@ function move(canvas) {
     function animate(delta) {
         cursorMap.forEach((cursor) => {
             cursor.update(delta);
-            cursor.renderClearCanvas(cx);
+            cursor.renderClearCanvas(cx, cursorCanvas);
         });
         cursorMap.forEach((cursor) => {
-            cursor.renderDrawCanvas(cx);
+            cursor.renderDrawCanvas(cx, cursorCanvas);
         });
     }
 }
