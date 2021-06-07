@@ -14,6 +14,7 @@ import useDeferedCallback, { getDocumentHeight } from "./util";
 // send tracking info only if position changes
 // but also if not changing send every 10 seconds
 // hover over svg problem
+// track cursor does unnessecary dom measuring
 
 function injectHtml() {
     var div = document.createElement("div");
