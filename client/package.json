@@ -11,6 +11,7 @@
         "circular-buffer": "^1.0.3",
         "crypto-js": "^4.0.0",
         "fastdom": "^1.0.10",
+        "offscreen-canvas": "^0.1.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
