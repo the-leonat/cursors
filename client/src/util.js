@@ -6,7 +6,7 @@ export default function useDeferedCallback(callback, delay) {
             timeoutId = null;
         }
         timeoutId = window.setTimeout(
-            () => window.requestAnimationFrame(callback),
+            callback,
             delay
         );
     }

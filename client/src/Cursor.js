@@ -18,7 +18,7 @@ export default class Cursor {
     t;
     duration;
     start = false;
-    shouldRender = false;
+    shouldRerender = false;
     constructor(x, y) {
         this.fromX = x;
         this.fromY = y;
@@ -40,10 +40,10 @@ export default class Cursor {
     // called every frame
     update(delta) {
         if (!this.start || this.t === 1) {
-            this.shouldRender = false;
+            this.shouldRerender = false;
             return false;
         }
-        this.shouldRender = true;
+        this.shouldRerender = true;
         this.saveOldPosition();
         this.t = clamp(this.t + (this.duration * delta));
         const easedT = easeInOut(this.t);
@@ -59,6 +59,10 @@ export default class Cursor {
         this.toY = Math.floor(_toY);
         this.subX = this.toX - this.fromX;
         this.subY = this.toY - this.fromY;
+    }
+
+    willDelete() {
+
     }
 
     moveTo(_x, _y, _duration) {
@@ -82,8 +86,7 @@ export default class Cursor {
     } 
 
     renderDrawCanvas(cx, cursorImage, force = false) {
-        if (!this.shouldRender && !force) return;
+        if (!this.shouldRerender && !force) return;
         cx.drawImage(cursorImage, this.x, this.y);
-
     }
 }

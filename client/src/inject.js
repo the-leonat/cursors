@@ -1,22 +1,27 @@
-import trackCursor, { useResourceId, getDimensions } from "./track";
-import CircularBuffer from "circular-buffer";
+import { useResourceId, getDimensions } from "./track";
 import useStorage from "./storage";
 import fastdom from "fastdom";
-import { useAnimationLoop } from "./view";
-import Cursor from "./Cursor";
 import useDeferedCallback, { getDocumentHeight } from "./util";
-import cursorImage from "data-url:./../assets/cursor.png";
-
+import createWorker from "./lib/createWorker";
 
 // todo convert to typescript
 // todo dont update position when cursor is only slightly different in position
-// move to offscreen canvas
+// move rendering to canvas to web worker (offscreen canvas)
 // bug cursor not included in the current frame cant update their position
 // useCursorData reset does not reset timer
 // send tracking info only if position changes
 // but also if not changing send every 10 seconds
-// hover over svg problem
+// hover over svg problem (prune xpaths)
 // track cursor does unnessecary dom measuring
+// use requestIdleCallback
+// https://github.com/pladaria/requestidlecallback-polyfill#readme
+//   while time remaining process another frame
+//   dont use fastdom measure (no sense since it uses rafs)
+//   if time is up, call another ric and continue
+// --> https://github.com/aFarkas/requestIdleCallback
+// cancel rICs on resize
+// buffer size == frames per second (usually 1) times buffer time (10)
+// soft navigation between pages reset data structures
 
 function injectHtml() {
     var div = document.createElement("div");
@@ -29,28 +34,17 @@ function injectHtml() {
     document.body.appendChild(div);
 }
 
-function useCursorData() {
-    const gFrameBufferCapacity = 100;
-    let gFrameBuffer;
-    let gLastLoadedFrameTime = 0;
-    let gLastFrameTimePerCursorDict = null;
-    let gLastFrameTime = null;
+async function useCursorData(_resourceId) {
     const gNodeMap = new Map();
     const { getFrames, getLastFrameTimePerCursor } = useStorage();
-    const getResourceId = useResourceId();
-
-    function reset() {
-        gFrameBuffer = new CircularBuffer(gFrameBufferCapacity);
-        gLastLoadedFrameTime = 0;
-        gNodeMap.clear();
-    }
-    reset();
-
-    function getLastFrameTime() {
-        return gLastFrameTime;
-    }
+    const { lastFrameTime, lastFrameTimePerCursorDict } =
+        await getLastFrameTimePerCursor(_resourceId);
 
     function lookupNode(xPath) {
+        if (gNodeMap.has(xPath)) {
+            return gNodeMap.get(xPath);
+        }
+
         const result = document.evaluate(
             xPath,
             document.body,
@@ -60,98 +54,85 @@ function useCursorData() {
         );
         const node = result.singleNodeValue;
         if (!node) {
-            console.log("node not found!!");
-        } else {
-            gNodeMap.set(xPath);
+            console.log("node not found:", xPath);
+            return undefined;
         }
+        gNodeMap.set(xPath, node);
         return node;
     }
 
-    function processFrame(frame, frameTime) {
-        // update nodemap
-        return {
-            frameTime,
-            lastFrame: frameTime >= gLastFrameTime,
-            entries: frame.map((entry) => {
-                const { xPath } = entry;
-                let node;
-                if (!gNodeMap.has(xPath)) {
-                    node = lookupNode(xPath);
-                    gNodeMap.set(xPath, node);
-                } else {
-                    node = gNodeMap.get(xPath);
+    function processFrameAsync(entries, frameTime) {
+        let entriesOfCurrentFrame = [];
+
+        function scheduleProcessEntry(resolve) {
+            window.requestIdleCallback((deadline) =>
+                processEntry(deadline, resolve)
+            );
+        }
+
+        function processEntry(deadline, resolve) {
+            while (deadline.timeRemaining() > 0 && entries.length > 0) {
+                const entry = entries.pop();
+                const { xPath, relX, relY, userId } = entry;
+                const node = lookupNode(xPath);
+                if (node) {
+                    const { x, y } = getAbsolutePosition(node, relX, relY);
+                    entriesOfCurrentFrame.push({
+                        node,
+                        userId,
+                        relX,
+                        relY,
+                        x,
+                        y,
+                        lastEntry: false,
+                    });
                 }
+            }
 
-                return {
-                    ...entry,
-                    lastEntry:
-                        frameTime >= gLastFrameTimePerCursorDict[entry.userId],
-                    node,
-                };
-            }),
-        };
-    }
-
-    async function fillBuffer() {
-        const { resourceId, changed: resourceIdChanged } = getResourceId();
-        if (resourceIdChanged) {
-            reset();
+            if (entries.length > 0) {
+                scheduleProcessEntry(resolve);
+            } else {
+                resolve({
+                    number: frameTime,
+                    last: false,
+                    entries: entriesOfCurrentFrame,
+                });
+            }
         }
 
-        const emptyBufferSize = gFrameBufferCapacity - gFrameBuffer.size();
-        const loadFromFrameTime = gLastLoadedFrameTime;
-        const loadToFrameTime = gLastLoadedFrameTime + emptyBufferSize;
-
-        if (loadToFrameTime <= gLastFrameTime) {
-            //rerun after 5 seconds
-            window.setTimeout(fillBuffer, 5000);
-        } else {
-            console.log("Framebuffer loaded all Frames");
-        }
-
-        if (emptyBufferSize > gFrameBufferCapacity * 0.25) {
-            // only refill when 25 percent empty
-            // buffer needs refill
-            // network request
-            gLastLoadedFrameTime += gFrameBuffer.size();
-            const result = await getFrames(
-                resourceId,
-                loadFromFrameTime,
-                loadToFrameTime
-            );
-            result.forEach(({ t: frameTime, frame }) =>
-                gFrameBuffer.enq(processFrame(frame, frameTime))
-            );
-            console.log(
-                `buffer is ${
-                    (gFrameBuffer.size() / gFrameBufferCapacity) * 100
-                }% full.`
-            );
-        }
+        return new Promise((resolve) => {
+            entriesOfCurrentFrame = [];
+            scheduleProcessEntry(resolve);
+        });
     }
 
-    async function start() {
-        const { resourceId } = getResourceId();
-        const { lastFrameTime, lastFrameTimePerCursorDict } =
-            await getLastFrameTimePerCursor(resourceId);
-        // update globals
-        console.log(lastFrameTime, lastFrameTimePerCursorDict);
-        gLastFrameTime = lastFrameTime;
-        gLastFrameTimePerCursorDict = lastFrameTimePerCursorDict;
-        fillBuffer();
+    async function get(_fromFrameNumber, _toFrameNumber) {
+        if (_fromFrameNumber > _toFrameNumber) throw "Erorr";
+        if (_toFrameNumber > lastFrameTime) return [];
+        const arr = [];
+        const result = await getFrames(
+            _resourceId,
+            _fromFrameNumber,
+            Math.min(_toFrameNumber, lastFrameTime)
+        );
+        // ToDo: maybe use map statement
+        for (const { t: frameTime, frame: entries } of result) {
+            if (entries && entries.length > 0) {
+                const from = window.performance.now();
+                arr.push(await processFrameAsync(entries, frameTime));
+                const d = window.performance.now() - from;
+                console.log(`processed frame ${frameTime} in ${d}ms`);
+            }
+        }
+        return arr;
     }
-
-    start();
 
     return {
-        frameBuffer: gFrameBuffer,
-        nodeMap: gNodeMap,
-        getLastFrameTime,
-        reset,
+        getFrames: get,
     };
 }
 
-function injectCanvas() {
+async function injectCanvas() {
     const canvas = document.createElement("canvas");
     canvas.style.position = "absolute";
     canvas.style.top = 0;
@@ -166,18 +147,27 @@ function injectCanvas() {
     document.body.appendChild(canvas);
 
     function adjustCanvasSize() {
-        canvas.height = getDocumentHeight();
-        canvas.width = document.body.offsetWidth;
-        canvas.style.visibility = "visible";
+        return new Promise((resolve) => {
+            fastdom.measure(() => {
+                canvas.height = getDocumentHeight();
+                canvas.width = document.body.offsetWidth;
+                fastdom.mutate(() => {
+                    canvas.style.display = "block";
+                    resolve();
+                });
+            });
+        });
     }
     const adjustCanvasSizeDefered = useDeferedCallback(adjustCanvasSize, 500);
 
     function adjustCanvasOnResize() {
-        canvas.style.visibility = "hidden";
+        fastdom.mutate(() => {
+            canvas.style.display = "none";
+        });
         adjustCanvasSizeDefered();
     }
     window.addEventListener("resize", adjustCanvasOnResize);
-    adjustCanvasSize();
+    await adjustCanvasSize();
     return canvas;
 }
 
@@ -194,121 +184,28 @@ function getAbsolutePosition(node, relX, relY) {
     };
 }
 
-function getOrCreateCursorFromUserId(cursorMap, userId) {
-    let cursor = cursorMap.get(userId);
-    if (!cursor) {
-        cursor = new Cursor(0, 0);
-        cursorMap.set(userId, cursor);
-    }
-    return cursor;
-}
-
-function updateCursorPositions(frame, cursorMap, updateFromOnly = false) {
-    frame.forEach((entry) => {
-        fastdom.measure(() => {
-            const { userId, relX, relY, node, lastEntry } = entry;
-            if (!node) return;
-            if (lastEntry) {
-                console.log("remove cursor", userId);
-                cursorMap.delete(userId);
-                return;
-            }
-            const { x, y } = getAbsolutePosition(node, relX, relY);
-            const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
-
-            if (updateFromOnly) {
-                cursor.updatePositions(x, y);
-            } else {
-                cursor.moveTo(x, y, 120);
-            }
-        });
-    });
-}
-
-function createCursorCanvas() {
-    return new Promise((resolve) => {
-        const offscreenCanvas = document.createElement("canvas");
-        const img = new Image();
-        console.log("cursorImage", cursorImage);
-        img.src = cursorImage; // can also be a remote URL e.g. http://
-        img.onload = function () {
-            offscreenCanvas.width = img.width;
-            offscreenCanvas.height = img.height;
-            console.log("Cursor canvas created with dimensions:", img.width, img.height)
-            offscreenCanvas.getContext("2d").drawImage(img, 0, 0);
-
-            resolve(offscreenCanvas);
-        };
-    });
-}
-
-async function move(canvas) {
-    const { frameBuffer, getLastFrameTime } = useCursorData();
-    const cx = canvas.getContext("2d");
-    const cursorMap = new Map();
-    const cursorCanvas = await createCursorCanvas();
-
-
-    const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(
-        animate,
-        60
-    );
-    let gCurrentEntries;
-    let gIsLastFrame;
-
-    const { start: startFrameProcessing, stop: stopFrameProcessing } =
-        useAnimationLoop(() => {
-            if (frameBuffer.size() === 0) return;
-            const { lastFrame, entries, frameTime } = frameBuffer.deq();
-            gCurrentEntries = entries;
-            gIsLastFrame = lastFrame;
-            console.log("process frame", frameTime);
-            updateCursorPositions(gCurrentEntries, cursorMap);
-            if (gIsLastFrame) {
-                gCurrentEntries = null;
-                console.log("end");
-                stopFrameProcessing();
-                stopAnimation();
-            }
-        }, 0.5);
-
-    const updateCursorPositionsOnResize = useDeferedCallback(() => {
-        if (!gCurrentEntries) return;
-        console.log("update", gCurrentEntries, canvas.width, canvas.height);
-
-        updateCursorPositions(gCurrentEntries, cursorMap, true);
-        console.log("resize");
-    }, 600);
-    window.addEventListener("resize", updateCursorPositionsOnResize);
-
-    function clearCanvas() {
-        cx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    startAnimation();
-    startFrameProcessing();
-    // clear canvas once
-    clearCanvas();
-
-    function animate(delta) {
-        cursorMap.forEach((cursor) => {
-            cursor.update(delta);
-            cursor.renderClearCanvas(cx, cursorCanvas);
-        });
-        cursorMap.forEach((cursor) => {
-            cursor.renderDrawCanvas(cx, cursorCanvas);
-        });
-    }
-}
-
-(function () {
+(async function () {
     if (window.injected) {
         console.log("already injected");
         return;
     }
     window.injected = true;
     injectHtml();
-    const canvas = injectCanvas();
-    move(canvas);
+    console.log("inject");
+    const canvas = await injectCanvas();
+    // move(canvas);
     // trackCursor();
+    const getResourceId = useResourceId();
+    const {resourceId, changed} = getResourceId();
+    const { getFrames } = await useCursorData(resourceId);
+
+    const worker = createWorker(canvas, (e) => {
+        console.log(e);
+        // if event == get me frames from to
+        getFrames(0, 100);
+
+        // event resized
+
+        // event resource changed
+    });
 })();
