@@ -31,6 +31,9 @@ export function useUI(handleStart, handleStop) {
         highestLoadedFrameNumber: -1,
         lastFrameNumber: -1
     };
+    const trackInfo = {
+        frameNumber: -1
+    }
 
     function updateProcessingInfo(_isProcessing, _from, _to) {
         processingInfo.isProcessing = _isProcessing;
@@ -52,6 +55,11 @@ export function useUI(handleStart, handleStop) {
         updateUI();
     }
 
+    function updateTrackInfo(_frameNumber) {
+        trackInfo.frameNumber = _frameNumber;
+        updateUI();
+    }
+
     function updateUI() {
         fastdom.mutate(() => {
             const { isProcessing, from, to } = processingInfo;
@@ -60,12 +68,13 @@ export function useUI(handleStart, handleStop) {
                 highestLoadedFrameNumber,
                 lastFrameNumber,
             } = renderInfo;
+            const {frameNumber: trackedFrameNumber} = trackInfo;
             const processingText = isProcessing
                 ? `processing (${from}/${to}}`
                 : "";
-            const renderText = `current (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber})`;
-
-            const text = `${renderText} ${processingText}`;
+            const renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber})`;
+            const trackText = `track (${trackedFrameNumber})`
+            const text = `${trackText} ${renderText} ${processingText}`;
             span.textContent = text;
         });
     }
@@ -104,5 +113,6 @@ export function useUI(handleStart, handleStop) {
     return {
         updateProcessingInfo,
         updateRenderInfo,
+        updateTrackInfo
     };
 }

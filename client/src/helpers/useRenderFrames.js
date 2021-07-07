@@ -5,7 +5,7 @@ import Cursor from "../model/Cursor";
 
 
 export const ANIMATION_FPS = 60;
-export const FRAMES_FPS = 0.5;
+export const FRAMES_FPS = 1;
 
 function getOrCreateCursorFromUserId(cursorMap, userId) {
     let cursor = cursorMap.get(userId);

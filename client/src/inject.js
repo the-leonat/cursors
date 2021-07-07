@@ -12,12 +12,12 @@ import trackCursor from "./track";
         return;
     }
     window.injected = true;
-    const { updateProcessingInfo, updateRenderInfo } = useUI(
+    const { updateProcessingInfo, updateRenderInfo, updateTrackInfo } = useUI(
         handleStart,
         handleStop
     );
     console.log("inject");
-    trackCursor();
+    trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(
@@ -38,6 +38,10 @@ import trackCursor from "./track";
     function handleRenderInfo(_data) {
         const { currentFrameNumber, highestLoadedFrameNumber } = _data;
         updateRenderInfo(currentFrameNumber, highestLoadedFrameNumber, getLastFrameNumber());
+    }
+
+    function handleCursorTracked(_frameNumber) {
+        updateTrackInfo(_frameNumber);
     }
 
     function handleFrameProcessing(_isProcessing, _from, _to) {
