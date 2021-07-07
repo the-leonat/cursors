@@ -1,6 +1,5 @@
-import workerUrl from "data-url:./../worker.js";
 
-module.exports = function (canvas, listener) {
+module.exports = function (workerUrl, canvas, listener) {
     if (canvas.transferControlToOffscreen) {
       var worker = new Worker(workerUrl)
       worker.onmessage = listener

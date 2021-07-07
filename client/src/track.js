@@ -2,21 +2,9 @@
 import xPath from "./lib/DOMPath";
 import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
-import useStorage from "./storage";
+import useStorage from "./helpers/useStorage";
 import fastdom from "fastdom";
-
-export function getDimensions(el, ignoreScrollPosition = false) {
-    // Todo: implement cache
-    const rect = el.getBoundingClientRect(),
-        scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
-        scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    return {
-        top: ignoreScrollPosition ? rect.top : rect.top + scrollTop,
-        left: ignoreScrollPosition ? rect.left : rect.left + scrollLeft,
-        width: rect.width,
-        height: rect.height,
-    };
-}
+import getElementDimensions from "./helpers/getElementDimensions";
 
 function useRelativeMousePosition() {
     let currentElement = {};
@@ -30,7 +18,7 @@ function useRelativeMousePosition() {
                 left: posX,
                 width,
                 height,
-            } = getDimensions(element);
+            } = getElementDimensions(element);
             currentElement = {
                 xPath: xPath(element),
                 width,

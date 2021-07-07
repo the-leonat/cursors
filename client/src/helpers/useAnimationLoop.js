@@ -1,4 +1,4 @@
-export function useAnimationLoop(callbackFunction, fps) {
+export default function useAnimationLoop(callbackFunction, fps) {
     let stopNext, fpsInterval, then, elapsed, running;
 
     function raf(_callback) {
