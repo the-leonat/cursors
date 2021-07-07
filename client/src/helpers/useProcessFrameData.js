@@ -2,6 +2,25 @@ import getElementDimensions from "./getElementDimensions";
 import useStorage from "./useStorage";
 import useDeferedCallback from "./useDeferedCallback";
 
+// shim
+window.requestIdleCallback = window.requestIdleCallback ||
+  function (cb) {
+    return setTimeout(function () {
+      var start = Date.now();
+      cb({ 
+        didTimeout: false,
+        timeRemaining: function () {
+          return Math.max(0, 50 - (Date.now() - start));
+        }
+      });
+    }, 1);
+  }
+
+window.cancelIdleCallback = window.cancelIdleCallback ||
+  function (id) {
+    clearTimeout(id);
+  } 
+
 export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
     const nodeCache = new Map();
     const dimensionsCache = new Map();
