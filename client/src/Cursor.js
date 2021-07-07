@@ -51,6 +51,7 @@ export default class Cursor {
         } else {
             return false;
         }
+        
     }
 
     updatePositions(_toX, _toY) {

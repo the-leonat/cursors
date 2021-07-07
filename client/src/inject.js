@@ -23,32 +23,84 @@ import createWorker from "./lib/createWorker";
 // buffer size == frames per second (usually 1) times buffer time (10)
 // soft navigation between pages reset data structures
 
-function useUI(handleStop, handleStart) {
-    var div = document.createElement("div");
+function useUI(handleStart, handleStop) {
+    const div = document.createElement("div");
+    const span = document.createElement("span");
+    const button = document.createElement("button");
+
+    const processingInfo = {
+        isProcessing: false,
+    };
+    const renderInfo = {
+        currentFrame: 0,
+    };
+
+    function updateProcessingInfo(_isProcessing, _from, _to) {
+        processingInfo.isProcessing = _isProcessing;
+        if (_isProcessing) {
+            processingInfo.from = _from;
+            processingInfo.to = _to;
+        }
+        updateUI();
+    }
+
+    function updateRenderInfo(_currentFrame) {
+        renderInfo.currentFrame = _currentFrame;
+        updateUI();
+    }
+
+    function updateUI() {
+        fastdom.mutate(() => {
+            const { isProcessing, from, to } = processingInfo;
+            const { currentFrame } = renderInfo;
+            const processingText = isProcessing
+                ? `processing (${from}/${to}}`
+                : "";
+            const renderText = `current (${currentFrame})`;
+
+            const text = `${renderText} ${processingText}`;
+            span.textContent = text;
+        });
+    }
+
     div.style.position = "fixed";
-    div.style.top = 0;
+    div.style.bottom = 0;
     div.style.right = 0;
     div.style.zIndex = 9999;
-    div.style.background = "red";
-    div.textContent = "Injected!";
-    var button = document.createElement("button");
+    div.style.background = "white";
+    div.style.fontFamily = "Courier New";
+    div.style.fontWeight = "bold";
+
     button.value = 0;
     button.textContent = "Start";
+
     button.onclick = () => {
-        const value = parseInt(button.value);
-        if (value === 0) {
-            handleStart();
-        } else if (value === 1) {
-            handleStop();
-        }
-        button.value = (value + 1) % 2;
-        button.textContent = value === 0 ? "Start" : "Stop";
+        fastdom.measure(() => {
+            const value = parseInt(button.value);
+            if (value === 0) {
+                handleStart();
+            } else if (value === 1) {
+                handleStop();
+            }
+            const newValue = (value + 1) % 2;
+            fastdom.mutate(() => {
+                button.value = newValue;
+                button.textContent = newValue === 0 ? "Start" : "Stop";
+            });
+        });
     };
+
+    div.appendChild(span);
     div.appendChild(button);
     document.body.appendChild(div);
+
+    return {
+        updateProcessingInfo,
+        updateRenderInfo,
+    };
 }
 
-async function useCursorData(_resourceId) {
+async function useCursorData(_resourceId, _onFrameProcessing) {
     const nodeCache = new Map();
     const dimensionsCache = new Map();
 
@@ -57,19 +109,18 @@ async function useCursorData(_resourceId) {
         await getLastFrameTimePerCursor(_resourceId);
 
     const clearDimensionsCache = useDeferedCallback(() => {
-        console.log("cleared dim cache")
+        console.log("cleared dim cache");
         dimensionsCache.clear();
     }, 500);
 
     window.addEventListener("resize", clearDimensionsCache);
-
 
     function getAbsolutePosition(node, relX, relY) {
         if (!node) {
             return undefined;
         }
         if (dimensionsCache.has(node)) {
-            return dimensionsCache.get(node)
+            return dimensionsCache.get(node);
         }
         const { left, top, width, height } = getDimensions(node, false);
         const absX = left + width * relX;
@@ -104,7 +155,7 @@ async function useCursorData(_resourceId) {
     }
 
     function processFrameAsync(entries, frameTime) {
-        let entriesOfCurrentFrame = [];
+        let entriesOfCurrentFrame;
 
         function scheduleProcessEntry(resolve) {
             window.requestIdleCallback((deadline) =>
@@ -165,6 +216,10 @@ async function useCursorData(_resourceId) {
             _toFrameNumber
         );
         // ToDo: maybe use map statement
+        let index = 0;
+        let length = result.length;
+        _onFrameProcessing(true, index, length);
+
         for (const { t: frameTime, frame: entries } of result) {
             if (entries && entries.length > 0) {
                 const from = window.performance.now();
@@ -172,7 +227,10 @@ async function useCursorData(_resourceId) {
                 const d = window.performance.now() - from;
                 console.log(`processed frame ${frameTime} in ${d}ms`);
             }
+            _onFrameProcessing(true, index, length);
+            index++;
         }
+        _onFrameProcessing(false);
         return arr;
     }
 
@@ -231,13 +289,19 @@ async function useHTMLCanvas(handleCanvasResize) {
         return;
     }
     window.injected = true;
-    useUI(handleStart, handleStop);
+    const { updateProcessingInfo, updateRenderInfo } = useUI(
+        handleStart,
+        handleStop
+    );
     console.log("inject");
     // move(canvas);
     // trackCursor();
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
-    const { getFrames } = await useCursorData(resourceId);
+    const { getFrames } = await useCursorData(
+        resourceId,
+        handleFrameProcessing
+    );
     const canvas = await useHTMLCanvas(handleCanvasResize);
     const worker = createWorker(canvas, handleWorkerEvent);
 
@@ -247,6 +311,15 @@ async function useHTMLCanvas(handleCanvasResize) {
             width: _newWidth,
             height: _newHeight,
         });
+    }
+
+    function handleRenderInfo(_data) {
+        const { currentFrame } = _data;
+        updateRenderInfo(currentFrame);
+    }
+
+    function handleFrameProcessing(_isProcessing, _from, _to) {
+        updateProcessingInfo(_isProcessing, _from, _to);
     }
 
     function handleStop() {
@@ -280,6 +353,8 @@ async function useHTMLCanvas(handleCanvasResize) {
             // handleInitialized();
         } else if (_event.data.type === "frames") {
             handleFramesRequest(_event.data);
+        } else if ((_event.data.type = "currentFrame")) {
+            handleRenderInfo(_event.data);
         }
     }
 })();

@@ -83,7 +83,7 @@ function useDrawCursors(getNextFrame, initializedCallback) {
                 stopAnimation();
                 return;
             }
-            const nextFrame = getNextFrame();
+            const nextFrame = getNextFrame(currentFrameNumber);
             if (!nextFrame) return;
             const { last, entries, number } = nextFrame;
             currentFrameNumber = number;
@@ -161,7 +161,9 @@ function useRequestFrameData(handleRequestFrames) {
         const lastFrame = frameBuffer.peekLast();
 
         if (firstFrame && lastFrame) {
-            console.log(`now in buffer frames ${firstFrame.number}-${lastFrame.number}`);
+            console.log(
+                `now in buffer frames ${firstFrame.number}-${lastFrame.number}`
+            );
             const { last } = lastFrame;
             highestLoadedFrameNumber = lastFrame.number + 1;
             if (last) {
@@ -219,9 +221,15 @@ function useRequestFrameData(handleRequestFrames) {
 
 (async function () {
     const worker = insideWorker(handleWorkerEvent);
+
+    const { getFrame, handleIncomingFrames, resetFrameBuffer, startRequest } =
+        useRequestFrameData(handleRequestFrames);
+    const { start, stop, setCanvas, getCurrentFrameNumber, resizeCanvas } =
+        useDrawCursors(handleGetNextFrame, handleInitialized);
+
     function handleRequestFrames(_from, _to) {
         if (!worker) throw "Worker not initialized";
-        console.log("request frames", _from, _to)
+        console.log("request frames", _from, _to);
         worker.post({
             type: "frames",
             from: _from,
@@ -234,11 +242,18 @@ function useRequestFrameData(handleRequestFrames) {
             type: "initialized",
         });
     }
+    
+    function handleGetNextFrame() {
+        const frame = getFrame();
+        if (!frame) return;
+        const { number } = frame;
+        worker.post({
+            type: "currentFrame",
+            currentFrame: number,
+        });
 
-    const { getFrame, handleIncomingFrames, resetFrameBuffer, startRequest } =
-        useRequestFrameData(handleRequestFrames);
-    const { start, stop, setCanvas, getCurrentFrameNumber, resizeCanvas } =
-        useDrawCursors(getFrame, handleInitialized);
+        return frame;
+    }
 
     function handleWorkerEvent(_event) {
         // console.log("worker thread event", _event);
