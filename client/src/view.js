@@ -24,8 +24,7 @@ export function useAnimationLoop(callbackFunction, fps) {
             elapsed = now - then;
             if (elapsed <= fpsInterval) return;
             then = now - (elapsed % fpsInterval);
-            const delta = elapsed / fpsInterval;
-            callbackFunction(delta, ...args);
+            callbackFunction(elapsed, ...args);
         }
         raf(invoke);
     }

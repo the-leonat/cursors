@@ -4,6 +4,9 @@ import Cursor from "./Cursor";
 import cursorImageUrlData from "data-url:./../assets/cursor.png";
 import CircularBuffer from "mnemonist/circular-buffer";
 
+const ANIMATION_FPS = 60;
+const FRAMES_FPS = 0.5;
+
 function getOrCreateCursorFromUserId(cursorMap, userId) {
     let cursor = cursorMap.get(userId);
     if (!cursor) {
@@ -19,12 +22,12 @@ function updateCursorPositions(frame, cursorMap, updateAfterResize = false) {
         const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
         if (last) {
-            cursor.willDelete();
+            cursor.deleteNextFrame();
         }
         if (updateAfterResize) {
             cursor.updatePositions(x, y);
         } else {
-            cursor.moveTo(x, y, 60);
+            cursor.moveTo(x, y, 1000 / FRAMES_FPS);
         }
     });
 }
@@ -46,6 +49,7 @@ function useDrawCursors(getNextFrame, initializedCallback) {
     let cursorCanvas;
     let currentFrameNumber = 0;
     let canvas;
+    let stopNextFrame = false;
 
     createCursorCanvas().then((_canvas) => {
         initializedCallback();
@@ -56,20 +60,29 @@ function useDrawCursors(getNextFrame, initializedCallback) {
         (delta, cx) => {
             // we need to await until this is resolved
             if (!cursorCanvas) return;
-            cursorMap.forEach((cursor) => {
-                cursor.update(delta);
+            cursorMap.forEach((cursor, cursorId) => {
+                const shouldDelete = cursor.update(delta);
                 cursor.renderClearCanvas(cx, cursorCanvas);
-                if (cursor.willDelete) cursorMap.delete(cursor);
+                if (shouldDelete) {
+                    cursorMap.delete(cursorId);
+                    console.log("delete cursor", cursorId);
+                }
             });
             cursorMap.forEach((cursor) => {
                 cursor.renderDrawCanvas(cx, cursorCanvas);
             });
         },
-        60
+        ANIMATION_FPS
     );
 
     const { start: startFrameProcessing, stop: stopFrameProcessing } =
         useAnimationLoop(() => {
+            if (stopNextFrame) {
+                console.log("end");
+                stopFrameProcessing();
+                stopAnimation();
+                return;
+            }
             const nextFrame = getNextFrame();
             if (!nextFrame) return;
             const { last, entries, number } = nextFrame;
@@ -77,20 +90,9 @@ function useDrawCursors(getNextFrame, initializedCallback) {
             console.log("render frame", number, nextFrame);
             updateCursorPositions(entries, cursorMap);
             if (last) {
-                console.log("end");
-                stopFrameProcessing();
-                stopAnimation();
+                stopNextFrame = true;
             }
-        }, 1);
-
-    // const updateCursorPositionsOnResize = useDeferedCallback(() => {
-    //     if (!gCurrentEntries) return;
-    //     console.log("update", gCurrentEntries, canvas.width, canvas.height);
-
-    //     updateCursorPositions(gCurrentEntries, cursorMap, true);
-    //     console.log("resize");
-    // }, 600);
-    // window.addEventListener("resize", updateCursorPositionsOnResize);
+        }, FRAMES_FPS);
 
     function getCurrentFrameNumber() {
         return currentFrameNumber;
@@ -114,6 +116,7 @@ function useDrawCursors(getNextFrame, initializedCallback) {
         if (!canvas) {
             throw "canvas is not set!";
         }
+        stopNextFrame = false;
         const cx = canvas.getContext("2d");
         startAnimation(cx);
         startFrameProcessing();
@@ -152,7 +155,6 @@ function useRequestFrameData(handleRequestFrames) {
     function handleIncomingFrames(data) {
         const { frames } = data;
         frames.forEach((frame) => {
-            console.log("queueed", frame)
             frameBuffer.push(frame);
         });
         const firstFrame = frameBuffer.peekFirst();

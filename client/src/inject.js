@@ -49,14 +49,42 @@ function useUI(handleStop, handleStart) {
 }
 
 async function useCursorData(_resourceId) {
-    const gNodeMap = new Map();
+    const nodeCache = new Map();
+    const dimensionsCache = new Map();
+
     const { getFrames, getLastFrameTimePerCursor } = useStorage();
     const { lastFrameTime, lastFrameTimePerCursorDict } =
         await getLastFrameTimePerCursor(_resourceId);
 
+    const clearDimensionsCache = useDeferedCallback(() => {
+        console.log("cleared dim cache")
+        dimensionsCache.clear();
+    }, 500);
+
+    window.addEventListener("resize", clearDimensionsCache);
+
+
+    function getAbsolutePosition(node, relX, relY) {
+        if (!node) {
+            return undefined;
+        }
+        if (dimensionsCache.has(node)) {
+            return dimensionsCache.get(node)
+        }
+        const { left, top, width, height } = getDimensions(node, false);
+        const absX = left + width * relX;
+        const absY = top + height * relY;
+        const dimensions = {
+            x: absX,
+            y: absY,
+        };
+        dimensionsCache.set(node, dimensions);
+        return dimensions;
+    }
+
     function lookupNode(xPath) {
-        if (gNodeMap.has(xPath)) {
-            return gNodeMap.get(xPath);
+        if (nodeCache.has(xPath)) {
+            return nodeCache.get(xPath);
         }
 
         const result = document.evaluate(
@@ -71,7 +99,7 @@ async function useCursorData(_resourceId) {
             console.log("node not found:", xPath);
             return undefined;
         }
-        gNodeMap.set(xPath, node);
+        nodeCache.set(xPath, node);
         return node;
     }
 
@@ -195,19 +223,6 @@ async function useHTMLCanvas(handleCanvasResize) {
     window.addEventListener("resize", adjustCanvasOnResize);
     await adjustCanvasSize(true);
     return canvas;
-}
-
-function getAbsolutePosition(node, relX, relY) {
-    if (!node) {
-        return undefined;
-    }
-    const { left, top, width, height } = getDimensions(node, false);
-    const absX = left + width * relX;
-    const absY = top + height * relY;
-    return {
-        x: absX,
-        y: absY,
-    };
 }
 
 (async function () {

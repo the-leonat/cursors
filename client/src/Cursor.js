@@ -18,7 +18,6 @@ export default class Cursor {
     t;
     duration;
     start = false;
-    shouldRerender = false;
     constructor(x, y) {
         this.fromX = x;
         this.fromY = y;
@@ -29,7 +28,7 @@ export default class Cursor {
         this.subX = 0;
         this.subY = 0;
         this.t = 0;
-        this.duration = 30;
+        this.duration = 1000;
         this.willDelete = false;
     }
 
@@ -40,19 +39,18 @@ export default class Cursor {
 
     // called every frame
     update(delta) {
-        if (!this.start || this.t === 1) {
-            this.shouldRerender = false;
-            return false;
-        }
-        this.shouldRerender = true;
         this.saveOldPosition();
-        this.t = clamp(this.t + (this.duration * delta));
+        this.t = clamp(this.t + delta / this.duration);
         const easedT = easeInOut(this.t);
         const dx = this.subX * easedT;
         const dy = this.subY * easedT;
         this.x = this.fromX + Math.floor(dx);
         this.y = this.fromY + Math.floor(dy);
-        return true;
+        if (this.t === 1 && this.willDelete) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     updatePositions(_toX, _toY) {
@@ -62,14 +60,14 @@ export default class Cursor {
         this.subY = this.toY - this.fromY;
     }
 
-    delete() {
+    deleteNextFrame() {
         this.willDelete = true;
     }
 
     moveTo(_x, _y, _duration) {
         this.start = true;
         this.t = 0;
-        this.duration = 1. / _duration; // in frames
+        this.duration = _duration; // in frames
         this.fromX = this.toX;
         this.fromY = this.toY;
         this.toX = Math.floor(_x);
@@ -79,7 +77,6 @@ export default class Cursor {
     }
 
     renderClearCanvas(cx, cursorImage, force = false) {
-        if (!this.shouldRerender && !force) return;
         const p = 2;
         const w = cursorImage.width;
         const h = cursorImage.height;
@@ -87,7 +84,6 @@ export default class Cursor {
     } 
 
     renderDrawCanvas(cx, cursorImage, force = false) {
-        if (!this.shouldRerender && !force) return;
         cx.drawImage(cursorImage, this.x, this.y);
     }
 }
