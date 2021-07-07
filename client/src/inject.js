@@ -23,7 +23,7 @@ import createWorker from "./lib/createWorker";
 // buffer size == frames per second (usually 1) times buffer time (10)
 // soft navigation between pages reset data structures
 
-function injectHtml() {
+function useUI(handleStop, handleStart) {
     var div = document.createElement("div");
     div.style.position = "fixed";
     div.style.top = 0;
@@ -31,6 +31,20 @@ function injectHtml() {
     div.style.zIndex = 9999;
     div.style.background = "red";
     div.textContent = "Injected!";
+    var button = document.createElement("button");
+    button.value = 0;
+    button.textContent = "Start";
+    button.onclick = () => {
+        const value = parseInt(button.value);
+        if (value === 0) {
+            handleStart();
+        } else if (value === 1) {
+            handleStop();
+        }
+        button.value = (value + 1) % 2;
+        button.textContent = value === 0 ? "Start" : "Stop";
+    };
+    div.appendChild(button);
     document.body.appendChild(div);
 }
 
@@ -78,13 +92,13 @@ async function useCursorData(_resourceId) {
                 if (node) {
                     const { x, y } = getAbsolutePosition(node, relX, relY);
                     entriesOfCurrentFrame.push({
-                        node,
+                        // node,
                         userId,
-                        relX,
-                        relY,
+                        // relX,
+                        // relY,
                         x,
                         y,
-                        lastEntry: false,
+                        last: lastFrameTimePerCursorDict[userId] === frameTime,
                     });
                 }
             }
@@ -94,7 +108,7 @@ async function useCursorData(_resourceId) {
             } else {
                 resolve({
                     number: frameTime,
-                    last: false,
+                    last: frameTime === lastFrameTime,
                     entries: entriesOfCurrentFrame,
                 });
             }
@@ -108,12 +122,19 @@ async function useCursorData(_resourceId) {
 
     async function get(_fromFrameNumber, _toFrameNumber) {
         if (_fromFrameNumber > _toFrameNumber) throw "Erorr";
-        if (_toFrameNumber > lastFrameTime) return [];
+        if (_fromFrameNumber > lastFrameTime)
+            return [
+                {
+                    number: _fromFrameNumber,
+                    last: true,
+                    entries: [],
+                },
+            ];
         const arr = [];
         const result = await getFrames(
             _resourceId,
             _fromFrameNumber,
-            Math.min(_toFrameNumber, lastFrameTime)
+            _toFrameNumber
         );
         // ToDo: maybe use map statement
         for (const { t: frameTime, frame: entries } of result) {
@@ -132,7 +153,7 @@ async function useCursorData(_resourceId) {
     };
 }
 
-async function injectCanvas() {
+async function useHTMLCanvas(handleCanvasResize) {
     const canvas = document.createElement("canvas");
     canvas.style.position = "absolute";
     canvas.style.top = 0;
@@ -146,11 +167,16 @@ async function injectCanvas() {
     document.body.style.minHeight = "100%";
     document.body.appendChild(canvas);
 
-    function adjustCanvasSize() {
+    function adjustCanvasSize(initial = false) {
         return new Promise((resolve) => {
             fastdom.measure(() => {
-                canvas.height = getDocumentHeight();
-                canvas.width = document.body.offsetWidth;
+                const width = document.body.offsetWidth;
+                const height = getDocumentHeight();
+                if (!initial) handleCanvasResize(width, height);
+                else {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
                 fastdom.mutate(() => {
                     canvas.style.display = "block";
                     resolve();
@@ -167,7 +193,7 @@ async function injectCanvas() {
         adjustCanvasSizeDefered();
     }
     window.addEventListener("resize", adjustCanvasOnResize);
-    await adjustCanvasSize();
+    await adjustCanvasSize(true);
     return canvas;
 }
 
@@ -190,22 +216,55 @@ function getAbsolutePosition(node, relX, relY) {
         return;
     }
     window.injected = true;
-    injectHtml();
+    useUI(handleStart, handleStop);
     console.log("inject");
-    const canvas = await injectCanvas();
     // move(canvas);
     // trackCursor();
     const getResourceId = useResourceId();
-    const {resourceId, changed} = getResourceId();
+    const { resourceId, changed } = getResourceId();
     const { getFrames } = await useCursorData(resourceId);
+    const canvas = await useHTMLCanvas(handleCanvasResize);
+    const worker = createWorker(canvas, handleWorkerEvent);
 
-    const worker = createWorker(canvas, (e) => {
-        console.log(e);
-        // if event == get me frames from to
-        getFrames(0, 100);
+    function handleCanvasResize(_newWidth, _newHeight) {
+        worker.post({
+            type: "resize",
+            width: _newWidth,
+            height: _newHeight,
+        });
+    }
 
-        // event resized
+    function handleStop() {
+        worker.post({
+            type: "stop",
+        });
+    }
 
-        // event resource changed
-    });
+    function handleStart() {
+        worker.post({
+            type: "start",
+        });
+    }
+
+    async function handleFramesRequest(_eventData) {
+        const { from, to } = _eventData;
+        // console.log("event data", _eventData)
+        const frames = await getFrames(from, to);
+        // console.log(frames);
+        worker.post({
+            type: "frames",
+            from,
+            to,
+            frames,
+        });
+    }
+
+    function handleWorkerEvent(_event) {
+        // console.log("mainthread event", _event)
+        if (_event.data.type === "initialized") {
+            // handleInitialized();
+        } else if (_event.data.type === "frames") {
+            handleFramesRequest(_event.data);
+        }
+    }
 })();

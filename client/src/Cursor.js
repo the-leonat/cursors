@@ -30,6 +30,7 @@ export default class Cursor {
         this.subY = 0;
         this.t = 0;
         this.duration = 30;
+        this.willDelete = false;
     }
 
     saveOldPosition() {
@@ -61,8 +62,8 @@ export default class Cursor {
         this.subY = this.toY - this.fromY;
     }
 
-    willDelete() {
-
+    delete() {
+        this.willDelete = true;
     }
 
     moveTo(_x, _y, _duration) {

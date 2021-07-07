@@ -22,7 +22,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev": "parcel watch src/inject.js src/background.js",
-        "build": "parcel build src/inject.js src/background.js"
+        "build": "parcel build src/inject.js src/background.js --no-optimize"
     },
     "author": "Leonard Puhl",
     "license": "ISC",
