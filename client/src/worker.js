@@ -5,7 +5,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
 (async function () {
     const worker = insideWorker(handleWorkerEvent);
 
-    const { getFrame, handleIncomingFrames, resetFrameBuffer, startRequest } =
+    const { getFrame, handleIncomingFrames, resetFrameBuffer, startRequest, getHighestLoadedFrameNumber } =
         useRequestFrameData(handleRequestFrames);
     const { start, stop, setCanvas, getCurrentFrameNumber, resizeCanvas } =
         useRenderFrames(handleGetNextFrame, handleInitialized);
@@ -32,7 +32,8 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         const { number } = frame;
         worker.post({
             type: "currentFrame",
-            currentFrame: number,
+            currentFrameNumber: number,
+            highestLoadedFrameNumber: getHighestLoadedFrameNumber() - 1
         });
 
         return frame;

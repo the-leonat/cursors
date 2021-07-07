@@ -27,7 +27,9 @@ export function useUI(handleStart, handleStop) {
         isProcessing: false,
     };
     const renderInfo = {
-        currentFrame: 0,
+        currentFrameNumber: -1,
+        highestLoadedFrameNumber: -1,
+        lastFrameNumber: -1
     };
 
     function updateProcessingInfo(_isProcessing, _from, _to) {
@@ -39,19 +41,29 @@ export function useUI(handleStart, handleStop) {
         updateUI();
     }
 
-    function updateRenderInfo(_currentFrame) {
-        renderInfo.currentFrame = _currentFrame;
+    function updateRenderInfo(
+        _currentFrameNumber,
+        _highestLoadedFrameNumber,
+        _lastFrameNumber
+    ) {
+        renderInfo.currentFrameNumber = _currentFrameNumber;
+        renderInfo.highestLoadedFrameNumber = _highestLoadedFrameNumber;
+        renderInfo.lastFrameNumber = _lastFrameNumber;
         updateUI();
     }
 
     function updateUI() {
         fastdom.mutate(() => {
             const { isProcessing, from, to } = processingInfo;
-            const { currentFrame } = renderInfo;
+            const {
+                currentFrameNumber,
+                highestLoadedFrameNumber,
+                lastFrameNumber,
+            } = renderInfo;
             const processingText = isProcessing
                 ? `processing (${from}/${to}}`
                 : "";
-            const renderText = `current (${currentFrame})`;
+            const renderText = `current (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber})`;
 
             const text = `${renderText} ${processingText}`;
             span.textContent = text;

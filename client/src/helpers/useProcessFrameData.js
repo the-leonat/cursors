@@ -11,12 +11,14 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         await getLastFrameTimePerCursor(_resourceId);
 
     const clearDimensionsCache = useDeferedCallback(() => {
-        console.log("cleared dim cache");
         dimensionsCache.clear();
     }, 500);
 
-    window.addEventListener("resize", clearDimensionsCache);
+    function getLastFrameNumber() {
+        return lastFrameTime ? lastFrameTime : -1;
+    }
 
+    window.addEventListener("resize", clearDimensionsCache);
     function getAbsolutePosition(node, relX, relY) {
         if (!node) {
             return undefined;
@@ -106,7 +108,7 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         if (_fromFrameNumber > lastFrameTime)
             return [
                 {
-                    number: _fromFrameNumber,
+                    number: 0,
                     last: true,
                     entries: [],
                 },
@@ -138,5 +140,6 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
 
     return {
         getFrames: get,
+        getLastFrameNumber
     };
 }

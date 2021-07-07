@@ -12,6 +12,10 @@ export function useRequestFrameData(handleRequestFrames) {
         requestFrames();
     }
 
+    function getHighestLoadedFrameNumber() {
+        return highestLoadedFrameNumber;
+    }
+
     function handleIncomingFrames(data) {
         const { frames } = data;
         frames.forEach((frame) => {
@@ -76,5 +80,6 @@ export function useRequestFrameData(handleRequestFrames) {
         getFrame,
         resetFrameBuffer,
         startRequest,
+        getHighestLoadedFrameNumber
     };
 }

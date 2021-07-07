@@ -28,9 +28,13 @@ export default function useStorage() {
         .rpc("get_last_frame_time", {
             _resource_id: resourceId,
         });
-        console.log(data)
+        const singleData = data[0];
+        if (!singleData) return {
+            lastFrameTime: -1,
+            lastFrameTimePerCursorDict: {}
+        };
 
-        const { lastFrameTime, ...dict } = data[0];
+        const { lastFrameTime, ...dict } = singleData;
         return {
             lastFrameTime,
             lastFrameTimePerCursorDict: dict

@@ -19,7 +19,7 @@ import workerUrl from "data-url:./worker.js";
     // trackCursor();
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
-    const { getFrames } = await useProcessFrameData(
+    const { getFrames, getLastFrameNumber } = await useProcessFrameData(
         resourceId,
         handleFrameProcessing
     );
@@ -35,8 +35,8 @@ import workerUrl from "data-url:./worker.js";
     }
 
     function handleRenderInfo(_data) {
-        const { currentFrame } = _data;
-        updateRenderInfo(currentFrame);
+        const { currentFrameNumber, highestLoadedFrameNumber } = _data;
+        updateRenderInfo(currentFrameNumber, highestLoadedFrameNumber, getLastFrameNumber());
     }
 
     function handleFrameProcessing(_isProcessing, _from, _to) {
