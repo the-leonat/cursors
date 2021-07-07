@@ -1,9 +1,9 @@
 {
-    "name": "Injecta",
+    "name": "Cursors",
     "version": "0.0.1",
     "manifest_version": 2,
-    "description": "Injecting stuff",
-    "homepage_url": "http://danharper.me",
+    "description": "Record and replay cursor movement",
+    "homepage_url": "http://leonat.de",
     "background": {
       "scripts": [
         "background.js"
@@ -11,7 +11,7 @@
       "persistent": true
     },
     "browser_action": {
-      "default_title": "Inject!"
+      "default_title": "CURSORS!"
     },
     "permissions": [
       "tabs",
