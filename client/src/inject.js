@@ -28,6 +28,7 @@ import trackCursor from "./track";
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
 
     function handleCanvasResize(_newWidth, _newHeight) {
+        if (!worker) return;
         worker.post({
             type: "resize",
             width: _newWidth,
