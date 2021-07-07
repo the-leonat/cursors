@@ -1,11 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
+function throwIfEmpty(_var) {
+    if (_var === undefined || _var === null) throw ("env var not present");
+    return _var;
+}
+
 export default function useStorage() {
-    const url = "https://vhlhmkunpdsosqdsnmru.supabase.co";
-    // public anon key
-    const key =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyMTk1Mzc2MiwiZXhwIjoxOTM3NTI5NzYyfQ.WQw7TAAcgkBh_NgixX6S0vgy08oBfQlRxBwXQwloJ7s";
-    const supabase = createClient(url, key);
+    const apiUrl = throwIfEmpty(process.env.API_URL);
+    const apiKey = throwIfEmpty(process.env.API_KEY);
+    const supabase = createClient(apiUrl, apiKey);
 
     async function persist(userId, resourceId, xPath, x, y, time) {
         const { data, error } = await supabase.from("cursors").insert([
