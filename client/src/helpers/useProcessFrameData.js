@@ -23,17 +23,23 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         if (!node) {
             return undefined;
         }
-        if (dimensionsCache.has(node)) {
-            return dimensionsCache.get(node);
+
+        function getAndPersist() {
+            const result = getElementDimensions(node, false);
+            dimensionsCache.set(node, result)
+            return result;
         }
-        const { left, top, width, height } = getElementDimensions(node, false);
+
+        const { left, top, width, height } = dimensionsCache.has(node)
+            ? dimensionsCache.get(node)
+            : getAndPersist()
+
         const absX = left + width * relX;
         const absY = top + height * relY;
         const dimensions = {
             x: absX,
             y: absY,
         };
-        dimensionsCache.set(node, dimensions);
         return dimensions;
     }
 
@@ -140,6 +146,6 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
 
     return {
         getFrames: get,
-        getLastFrameNumber
+        getLastFrameNumber,
     };
 }

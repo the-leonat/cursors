@@ -4,6 +4,7 @@ import { useUI } from "./helpers/useUI";
 import { useProcessFrameData } from "./helpers/useProcessFrameData";
 import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
 import workerUrl from "data-url:./worker.js";
+import trackCursor from "./track";
 
 (async function () {
     if (window.injected) {
@@ -16,7 +17,7 @@ import workerUrl from "data-url:./worker.js";
         handleStop
     );
     console.log("inject");
-    // trackCursor();
+    trackCursor();
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(

@@ -1,13 +1,13 @@
 
 export default function useDeferedCallback(callback, delay) {
     let timeoutId = null;
-    function call() {
+    function call(...args) {
         if (timeoutId) {
             window.clearTimeout(timeoutId);
             timeoutId = null;
         }
         timeoutId = window.setTimeout(
-            callback,
+            () => callback(...args),
             delay
         );
     }

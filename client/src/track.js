@@ -1,57 +1,8 @@
 // this is the code which will be injected into a given page...
-import xPath from "./lib/DOMPath";
 import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
 import useStorage from "./helpers/useStorage";
-import fastdom from "fastdom";
-import getElementDimensions from "./helpers/getElementDimensions";
-
-function useRelativeMousePosition() {
-    let currentElement = {};
-    let currentMousePosition = {};
-
-    function handleMouseOver(event) {
-        fastdom.measure(() => {
-            const { target: element, pageX: mouseX, pageY: mouseY } = event;
-            const {
-                top: posY,
-                left: posX,
-                width,
-                height,
-            } = getElementDimensions(element);
-            currentElement = {
-                xPath: xPath(element),
-                width,
-                height,
-                posX,
-                posY,
-            };
-            currentMousePosition = {
-                x: mouseX,
-                y: mouseY,
-            };
-        });
-    }
-
-    function getRelativeMousePosition() {
-        const { posX, posY, width, height, xPath } = currentElement;
-        const { x: mouseX, y: mouseY } = currentMousePosition;
-        const relX = (mouseX - posX) / width;
-        const relY = (mouseY - posY) / height;
-        return { xPath, relX, relY };
-    }
-
-    function destroy() {
-        document.removeEventListener("mousemove", handleMouseOver);
-    }
-    document.addEventListener("mousemove", handleMouseOver);
-    // document.addEventListener("mousemove", handleMouseOver);
-
-    return {
-        getRelativeMousePosition,
-        destroy,
-    };
-}
+import useRelativeMousePosition from "./helpers/useRelativeMousePosition";
 
 function useTimePassed() {
     let startTime;
@@ -127,15 +78,15 @@ function useUserId() {
     };
 }
 
-function trackCursor() {
+export default function trackCursor() {
     const { getRelativeMousePosition } = useRelativeMousePosition();
     const { getTimePassed, resetTimePassed } = useTimePassed();
     const { getUserId, reset: resetUserId } = useUserId();
     const getResourceId = useResourceId();
     const { persist } = useStorage();
-    function tick() {
+    async function tick() {
         const { resourceId, changed: resourceIdChanged } = getResourceId();
-        const { xPath, relX, relY } = getRelativeMousePosition();
+        const { xPath, relX, relY } = await getRelativeMousePosition();
         if (resourceIdChanged) {
             resetTimePassed();
             resetUserId();
@@ -147,5 +98,3 @@ function trackCursor() {
     }
     const { destroy: destroyClock } = useClock(tick, 2000);
 }
-
-export default trackCursor;
