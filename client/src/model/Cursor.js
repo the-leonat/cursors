@@ -25,6 +25,8 @@ export default class Cursor {
         this.toY = y;
         this.x = Math.floor(x);
         this.y = Math.floor(y);
+        this.oldX = this.x;
+        this.oldY = this.y;
         this.subX = 0;
         this.subY = 0;
         this.t = 0;
@@ -41,7 +43,8 @@ export default class Cursor {
     update(delta) {
         this.saveOldPosition();
         this.t = clamp(this.t + delta / this.duration);
-        const easedT = easeInOut(this.t);
+        // const easedT = easeInOut(this.t);
+        const easedT = this.t;
         const dx = this.subX * easedT;
         const dy = this.subY * easedT;
         this.x = this.fromX + Math.floor(dx);
@@ -51,7 +54,6 @@ export default class Cursor {
         } else {
             return false;
         }
-        
     }
 
     updatePositions(_toX, _toY) {
@@ -78,13 +80,20 @@ export default class Cursor {
     }
 
     renderClearCanvas(cx, cursorImage, force = false) {
+        // return;
         const p = 2;
         const w = cursorImage.width;
         const h = cursorImage.height;
         cx.clearRect(this.oldX - p, this.oldY - p, w + p * 2, h + p * 2);
-    } 
+    }
 
     renderDrawCanvas(cx, cursorImage, force = false) {
+        // cx.strokeStyle = "#000"; //Red
+        // cx.lineWidth = 1;
+        // cx.beginPath();
+        // cx.moveTo(this.oldX, this.oldY);
+        // cx.lineTo(this.x, this.y);
+        // cx.stroke();
         cx.drawImage(cursorImage, this.x, this.y);
     }
 }

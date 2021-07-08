@@ -18,7 +18,7 @@ import fastdom from "fastdom";
 // cancel rICs on resize
 // buffer size == frames per second (usually 1) times buffer time (10)
 // soft navigation between pages reset data structures
-export function useUI(handleStart, handleStop) {
+export function useUI(handleStart, handleStop, hide) {
     const div = document.createElement("div");
     const span = document.createElement("span");
     const button = document.createElement("button");
@@ -61,6 +61,7 @@ export function useUI(handleStart, handleStop) {
     }
 
     function updateUI() {
+        if (hide) return;
         fastdom.mutate(() => {
             const { isProcessing, from, to } = processingInfo;
             const {
@@ -108,7 +109,7 @@ export function useUI(handleStart, handleStop) {
 
     div.appendChild(span);
     div.appendChild(button);
-    document.body.appendChild(div);
+    if (!hide) document.body.appendChild(div);
 
     return {
         updateProcessingInfo,

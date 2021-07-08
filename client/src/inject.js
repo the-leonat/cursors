@@ -6,6 +6,8 @@ import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
 import workerUrl from "data-url:./worker.js";
 import trackCursor from "./track";
 
+const SILENT = process.env.SILENT !== undefined;
+
 (async function () {
     if (window.injected) {
         console.log("already injected");
@@ -14,10 +16,11 @@ import trackCursor from "./track";
     window.injected = true;
     const { updateProcessingInfo, updateRenderInfo, updateTrackInfo } = useUI(
         handleStart,
-        handleStop
+        handleStop,
+        SILENT
     );
     console.log("inject");
-    trackCursor(handleCursorTracked);
+    // trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(
@@ -77,6 +80,9 @@ import trackCursor from "./track";
     function handleWorkerEvent(_event) {
         // console.log("mainthread event", _event)
         if (_event.data.type === "initialized") {
+            if (SILENT) {
+                handleStart();
+            }
             // handleInitialized();
         } else if (_event.data.type === "frames") {
             handleFramesRequest(_event.data);

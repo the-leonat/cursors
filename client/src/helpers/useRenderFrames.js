@@ -115,7 +115,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
         startAnimation(cx);
         startFrameProcessing();
         // clear canvas once
-        clearCanvas();
+        // clearCanvas();
     }
 
     function stop() {

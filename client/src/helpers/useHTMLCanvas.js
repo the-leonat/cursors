@@ -11,6 +11,8 @@ export async function useHTMLCanvas(handleCanvasResize) {
     canvas.style.minHeight = "100%";
     canvas.style.pointerEvents = "none";
     canvas.style.zIndex = 9999;
+    // canvas.style.opacity = 0.8;
+    // canvas.style.mixBlendMode = "luminosity";
     document.documentElement.style.height = "100%";
     document.body.style.position = "relative";
     document.body.style.minHeight = "100%";
