@@ -23,18 +23,24 @@ export default function useStorage() {
         ]);
     }
 
+    async function persistMultiple(_data) {
+        const { data, error } = await supabase.from("cursors").insert(_data);
+    }
+
     async function getLastFrameTimePerCursor(resourceId) {
         const { data, error } = await supabase
         .rpc("get_last_frame_time", {
             _resource_id: resourceId,
         });
-        const singleData = data[0];
+        const singleData = data?.[0]?.data;
+
         if (!singleData) return {
             lastFrameTime: -1,
             lastFrameTimePerCursorDict: {}
         };
 
         const { lastFrameTime, ...dict } = singleData;
+
         return {
             lastFrameTime,
             lastFrameTimePerCursorDict: dict
@@ -54,6 +60,7 @@ export default function useStorage() {
 
     return {
         persist,
+        persistMultiple,
         getFrames,
         getLastFrameTimePerCursor
     };

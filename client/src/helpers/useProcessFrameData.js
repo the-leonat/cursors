@@ -29,6 +29,8 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
     const { lastFrameTime, lastFrameTimePerCursorDict } =
         await getLastFrameTimePerCursor(_resourceId);
 
+    console.log("lastFrameTime", lastFrameTime);
+
     const clearDimensionsCache = useDeferedCallback(() => {
         dimensionsCache.clear();
     }, 500);

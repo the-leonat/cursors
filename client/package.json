@@ -3,7 +3,6 @@
     "version": "0.1.0",
     "description": "",
     "dependencies": {
-        "@parcel/transformer-js": "^2.0.0-nightly.662",
         "@supabase/supabase-js": "^1.11.16",
         "crypto-js": "^4.0.0",
         "fastdom": "^1.0.10",
@@ -11,10 +10,10 @@
         "uuid": "^8.3.2"
     },
     "devDependencies": {
-        "@parcel/optimizer-data-url": "^2.0.0-nightly.748",
-        "@parcel/transformer-inline-string": "^2.0.0-nightly.748",
+        "@parcel/optimizer-data-url": "^2.0.1",
+        "@parcel/transformer-inline-string": "^2.0.1",
         "lib": "^4.3.3",
-        "parcel": "^2.0.0-nightly.746",
+        "parcel": "^2.0.1",
         "parcel-reporter-static-files-copy": "^1.3.0"
     },
     "scripts": {

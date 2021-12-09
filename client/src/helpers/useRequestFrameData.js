@@ -2,7 +2,7 @@ import CircularBuffer from "mnemonist/circular-buffer";
 
 export function useRequestFrameData(handleRequestFrames) {
     const framesPerSecond = 1;
-    const bufferSizeInSeconds = 10;
+    const bufferSizeInSeconds = 20;
     const frameBufferCapacity = framesPerSecond * bufferSizeInSeconds;
     const frameBuffer = new CircularBuffer(Array, frameBufferCapacity);
     let currentTimeoutId = null;
