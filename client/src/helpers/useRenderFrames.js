@@ -2,9 +2,7 @@ import useAnimationLoop from "./useAnimationLoop";
 import createCursorCanvas from "./createCursorCanvas";
 import cursorImageUrlData from "data-url:../../assets/cursor.png";
 import Cursor from "../model/Cursor";
-
-export const ANIMATION_FPS = 60;
-export const FRAMES_FPS = 4;
+import { ANIMATION_FPS, TRACKING_FPS } from "../config";
 
 function getOrCreateCursorFromUserId(cursorMap, userId) {
     let cursor = cursorMap.get(userId);
@@ -24,7 +22,7 @@ function updateCursorPositions(frame, cursorMap, updateAfterResize = false) {
             // console.log("deletenext frame")
             cursor.deleteNextFrame();
         }
-        cursor.moveTo(x, y, 1000 / FRAMES_FPS, updateAfterResize);
+        cursor.moveTo(x, y, 1000 / TRACKING_FPS, updateAfterResize);
     });
 }
 
@@ -77,7 +75,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
             if (last) {
                 stopNextFrame = true;
             }
-        }, FRAMES_FPS);
+        }, TRACKING_FPS);
 
     function getCurrentFrameNumber() {
         return currentFrameNumber;

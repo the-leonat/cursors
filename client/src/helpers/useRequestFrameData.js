@@ -1,9 +1,10 @@
 import CircularBuffer from "mnemonist/circular-buffer";
+import { TRACKING_FPS } from "../config"
 
 export function useRequestFrameData(handleRequestFrames) {
-    const framesPerSecond = 4;
     const bufferSizeInSeconds = 15;
-    const frameBufferCapacity = framesPerSecond * bufferSizeInSeconds;
+    const frameBufferCapacity = TRACKING_FPS * bufferSizeInSeconds;
+    console.log(frameBufferCapacity)
     const frameBuffer = new CircularBuffer(Array, frameBufferCapacity);
     let currentTimeoutId = null;
     let highestLoadedFrameNumber = 0;

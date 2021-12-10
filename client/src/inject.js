@@ -3,7 +3,7 @@ import createWorker from "./lib/createWorker";
 import { useUI } from "./helpers/useUI";
 import { useProcessFrameData } from "./helpers/useProcessFrameData";
 import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
-import workerUrl from "data-url:./worker.js";
+import workerUrl from "data-url:./render.js";
 import trackCursor from "./track";
 
 const SILENT = process.env.SILENT !== undefined;

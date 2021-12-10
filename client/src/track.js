@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
 import useStorage from "./helpers/useStorage";
 import useRelativeMousePosition from "./helpers/useRelativeMousePosition";
+import { TRACKING_FPS } from "./config";
 
 function useTimePassed() {
     let startTime;
@@ -160,7 +161,7 @@ export default function trackCursor(onCursorTrack) {
         frameNumber += 1;
         onCursorTrack(frameNumber, persistedFrameNumber);        // console.log("tracked", frameNumber);
     }
-    const { start: startClock, destroy: stopClock } = useClock(tick, 1000 / 4);
+    const { start: startClock, destroy: stopClock } = useClock(tick, 1000 / TRACKING_FPS);
     function start() {
         startClock();
     }
