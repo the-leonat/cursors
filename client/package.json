@@ -14,22 +14,44 @@
         "@parcel/transformer-inline-string": "^2.0.1",
         "lib": "^4.3.3",
         "parcel": "^2.0.1",
-        "parcel-reporter-static-files-copy": "^1.3.0"
+        "parcel-reporter-static-files-copy": "github:Drecu/parcel-reporter-static-files-copy"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "parcel watch src/inject.js src/background.js",
-        "build": "parcel build src/inject.js src/background.js"
+        "dev": "parcel watch",
+        "build": "parcel build"
     },
     "author": "Leonard Puhl",
     "license": "ISC",
+    "staticFiles": {
+        "distDir": "dist/extension",
+        "staticPath": "static"
+    },
     "targets": {
-        "ext": {
+        "standalone": {
+            "source": [
+                "src/inject.js"
+            ],
+            "distDir": "dist/standalone",
+            "sourceMap": false,
             "engines": {
                 "browsers": [
                     "last 2 Chrome versions"
                 ],
-                "includeNodeModules": "true",
+                "optimize": "true",
+                "context": "browser"
+            }
+        },
+        "chrome-extension": {
+            "source": [
+                "src/inject.js",
+                "src/background.js"
+            ],
+            "distDir": "dist/extension",
+            "engines": {
+                "browsers": [
+                    "last 2 Chrome versions"
+                ],
                 "optimize": "true",
                 "context": "browser",
                 "sourceMap": "true"
