@@ -12,7 +12,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
 
     function handleRequestFrames(_from, _to) {
         if (!worker) throw "Worker not initialized";
-        console.log("request frames", _from, _to);
+        // console.log("request frames", _from, _to);
         worker.post({
             type: "frames",
             from: _from,

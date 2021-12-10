@@ -3,23 +3,25 @@ import useStorage from "./useStorage";
 import useDeferedCallback from "./useDeferedCallback";
 
 // shim
-window.requestIdleCallback = window.requestIdleCallback ||
-  function (cb) {
-    return setTimeout(function () {
-      var start = Date.now();
-      cb({ 
-        didTimeout: false,
-        timeRemaining: function () {
-          return Math.max(0, 50 - (Date.now() - start));
-        }
-      });
-    }, 1);
-  }
+window.requestIdleCallback =
+    window.requestIdleCallback ||
+    function (cb) {
+        return setTimeout(function () {
+            var start = Date.now();
+            cb({
+                didTimeout: false,
+                timeRemaining: function () {
+                    return Math.max(0, 50 - (Date.now() - start));
+                },
+            });
+        }, 1);
+    };
 
-window.cancelIdleCallback = window.cancelIdleCallback ||
-  function (id) {
-    clearTimeout(id);
-  } 
+window.cancelIdleCallback =
+    window.cancelIdleCallback ||
+    function (id) {
+        clearTimeout(id);
+    };
 
 export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
     const nodeCache = new Map();
@@ -29,7 +31,7 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
     const { lastFrameTime, lastFrameTimePerCursorDict } =
         await getLastFrameTimePerCursor(_resourceId);
 
-    console.log("lastFrameTime", lastFrameTime);
+    // console.log("lastFrameTime", lastFrameTime);
 
     const clearDimensionsCache = useDeferedCallback(() => {
         dimensionsCache.clear();
@@ -46,14 +48,14 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         }
 
         function getAndPersist() {
-            const result = getElementDimensions(node, false);
-            dimensionsCache.set(node, result)
-            return result;
+            const frames = getElementDimensions(node, false);
+            dimensionsCache.set(node, frames);
+            return frames;
         }
 
         const { left, top, width, height } = dimensionsCache.has(node)
             ? dimensionsCache.get(node)
-            : getAndPersist()
+            : getAndPersist();
 
         const absX = left + width * relX;
         const absY = top + height * relY;
@@ -69,16 +71,16 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
             return nodeCache.get(xPath);
         }
 
-        const result = document.evaluate(
+        const frames = document.evaluate(
             xPath,
             document.body,
             null,
             XPathResult.ANY_UNORDERED_NODE_TYPE,
             null
         );
-        const node = result.singleNodeValue;
+        const node = frames.singleNodeValue;
         if (!node) {
-            console.log("node not found:", xPath);
+            // console.log("node not found:", xPath);
             return undefined;
         }
         nodeCache.set(xPath, node);
@@ -140,29 +142,33 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
                     entries: [],
                 },
             ];
-        const arr = [];
-        const result = await getFrames(
+        const frames = await getFrames(
             _resourceId,
             _fromFrameNumber,
             _toFrameNumber
         );
         // ToDo: maybe use map statement
-        let index = 0;
-        let length = result.length;
-        _onFrameProcessing(true, index, length);
+        // _onFrameProcessing(true, index, length);
+        _onFrameProcessing(true, 0, frames.length);
+        let countProcessed = 0;
+        const processedFrames = await Promise.all(frames.map(
+            async ({ t: frameTime, frame: entries }, _index) => {
+                if (!entries) return null;
 
-        for (const { t: frameTime, frame: entries } of result) {
-            if (entries && entries.length > 0) {
                 const from = window.performance.now();
-                arr.push(await processFrameAsync(entries, frameTime));
+                const processedFrame = await processFrameAsync(
+                    entries,
+                    frameTime
+                );
+                countProcessed++;
+                _onFrameProcessing(true, countProcessed, frames.length);
                 const d = window.performance.now() - from;
                 console.log(`processed frame ${frameTime} in ${d}ms`);
+                return processedFrame;
             }
-            _onFrameProcessing(true, index, length);
-            index++;
-        }
+        ));
         _onFrameProcessing(false);
-        return arr;
+        return processedFrames;
     }
 
     return {

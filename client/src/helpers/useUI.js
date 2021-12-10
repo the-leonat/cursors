@@ -55,8 +55,9 @@ export function useUI(handleStart, handleStop, hide) {
         updateUI();
     }
 
-    function updateTrackInfo(_frameNumber) {
+    function updateTrackInfo(_frameNumber, _persistedFrameNumber) {
         trackInfo.frameNumber = _frameNumber;
+        trackInfo.persistedFrameNumber = _persistedFrameNumber;
         updateUI();
     }
 
@@ -69,12 +70,12 @@ export function useUI(handleStart, handleStop, hide) {
                 highestLoadedFrameNumber,
                 lastFrameNumber,
             } = renderInfo;
-            const {frameNumber: trackedFrameNumber} = trackInfo;
+            const {frameNumber: trackedFrameNumber, persistedFrameNumber} = trackInfo;
             const processingText = isProcessing
                 ? `processing (${from}/${to}}`
                 : "";
             const renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber})`;
-            const trackText = `track (${trackedFrameNumber})`
+            const trackText = `track (${persistedFrameNumber}/${trackedFrameNumber})`
             const text = `${trackText} ${renderText} ${processingText}`;
             span.textContent = text;
         });

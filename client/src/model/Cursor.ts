@@ -19,6 +19,15 @@ interface Movement {
     isDone: () => boolean;
 }
 
+class CurvedMovement implements Movement {
+    tick: (delta: number) => void;
+    move: (_start: [number, number], _end: [number, number], _duration: number) => void;
+    updateEndPosition: (_pos: [number, number]) => void;
+    getPosition: () => [number, number];
+    getPreviousPosition: () => [number, number];
+    isDone: () => boolean;
+}
+
 class LinearMovement implements Movement {
     private x: number;
     private y: number;
@@ -37,8 +46,8 @@ class LinearMovement implements Movement {
     tick: (delta: number) => void = (_delta) => {
         this._saveOldPosition();
         this.t = clamp(this.t + _delta / this.duration);
-        const easedT = easeInOut(this.t);
-        // const easedT = this.t;
+        // const easedT = easeInOut(this.t);
+        const easedT = this.t;
         const dx = this.subX * easedT;
         const dy = this.subY * easedT;
         this.x = this.fromX + Math.floor(dx);
@@ -115,7 +124,7 @@ export default class Cursor {
         _duration: number,
         _update: boolean = false
     ) {
-        console.log(this.position);
+        // console.log(this.position);
         this.prevPosition = [...this.position];
         this.position = [_x, _y];
         if (!this.prevPosition || !this.position) return;

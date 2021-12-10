@@ -22,12 +22,20 @@ function useTimePassed() {
 }
 
 function useClock(tick, interval) {
-    const intervalId = window.setInterval(tick, interval);
+    let intervalId;
+    function start() {
+        if (intervalId) {
+            window.clearInterval(intervalId);
+        }
+        intervalId = window.setInterval(tick, interval);
+    }
     function destroy() {
         window.clearInterval(intervalId);
+        intervalId = undefined;
     }
 
     return {
+        start,
         destroy,
     };
 }
@@ -98,6 +106,12 @@ function useBufferedPersist(_bufferSize) {
         persistImmediate();
     }
 
+    window.onbeforeunload = function() {
+        console.log("persist before leave")
+        persistImmediate();
+        return;
+    };
+
     return { persist, flush };
 }
 
@@ -105,21 +119,54 @@ export default function trackCursor(onCursorTrack) {
     const { getRelativeMousePosition } = useRelativeMousePosition();
     const { getUserId, reset: resetUserId } = useUserId();
     const getResourceId = useResourceId();
-    const { persist, flush } = useBufferedPersist(10);
+    const { persist, flush } = useBufferedPersist(4 * 4);
     let frameNumber = 0;
+    let persistedFrameNumber = 0;
+    let lastMousePositionX = 0;
+    let lastMousePositionY = 0;
+
+    function shouldPersist(absX, absY) {
+        const treshold = 5;
+        if (Math.abs(lastMousePositionX - absX) > treshold) return true;
+        if (Math.abs(lastMousePositionY - absY) > treshold) return true;
+        return false;
+    }
+
     async function tick() {
         const { resourceId, changed: resourceIdChanged } = getResourceId();
-        const { xPath, relX, relY } = await getRelativeMousePosition();
+        const { xPath, relX, relY, absX, absY } =
+            await getRelativeMousePosition();
+        const persistPosition = shouldPersist(absX, absY);
+
         if (resourceIdChanged) {
             resetUserId();
             flush();
             frameNumber = 0;
+            persistedFrameNumber = 0;
+        } else if (persistPosition) {
+            const userId = getUserId();
+            persistedFrameNumber += 1;
+            lastMousePositionX = absX;
+            lastMousePositionY = absY;
+            persist({
+                user_id: userId,
+                resource_id: resourceId,
+                xpath: xPath,
+                x: relX,
+                y: relY,
+                time: frameNumber,
+            });
         }
-        const userId = getUserId();
-        persist({ user_id: userId, resource_id: resourceId, xpath: xPath, x: relX, y: relY, time: frameNumber });
-        onCursorTrack(frameNumber);
         frameNumber += 1;
-        console.log("tracked", frameNumber);
+        onCursorTrack(frameNumber, persistedFrameNumber);        // console.log("tracked", frameNumber);
     }
-    const { destroy: destroyClock } = useClock(tick, 1000 / 8);
+    const { start: startClock, destroy: stopClock } = useClock(tick, 1000 / 4);
+    function start() {
+        startClock();
+    }
+    function stop() {
+        stopClock();
+    }
+
+    return { start, stop };
 }

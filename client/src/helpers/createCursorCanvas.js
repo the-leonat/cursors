@@ -7,6 +7,6 @@ export default async function createCursorCanvas(imageUrlData) {
     offscreenCanvas.width = imageBitmap.width;
     offscreenCanvas.height = imageBitmap.height;
     offscreenCanvas.getContext("2d").drawImage(imageBitmap, 0, 0);
-    console.log(imageBitmap.width, imageBitmap.height);
+    // console.log(imageBitmap.width, imageBitmap.height);
     return offscreenCanvas;
 }

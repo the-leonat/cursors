@@ -4,7 +4,7 @@ import cursorImageUrlData from "data-url:../../assets/cursor.png";
 import Cursor from "../model/Cursor";
 
 export const ANIMATION_FPS = 60;
-export const FRAMES_FPS = 1;
+export const FRAMES_FPS = 4;
 
 function getOrCreateCursorFromUserId(cursorMap, userId) {
     let cursor = cursorMap.get(userId);
@@ -21,7 +21,7 @@ function updateCursorPositions(frame, cursorMap, updateAfterResize = false) {
         const cursor = getOrCreateCursorFromUserId(cursorMap, userId);
 
         if (last) {
-            console.log("deletenext frame")
+            // console.log("deletenext frame")
             cursor.deleteNextFrame();
         }
         cursor.moveTo(x, y, 1000 / FRAMES_FPS, updateAfterResize);
@@ -50,7 +50,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
                 cursor.renderClearCanvas(cx, cursorCanvas);
                 if (shouldDelete) {
                     cursorMap.delete(cursorId);
-                    console.log("delete cursor", cursorId);
+                    // console.log("delete cursor", cursorId);
                 }
             });
             cursorMap.forEach((cursor) => {
@@ -63,7 +63,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
     const { start: startFrameProcessing, stop: stopFrameProcessing } =
         useAnimationLoop(() => {
             if (stopNextFrame) {
-                console.log("end");
+                // console.log("end");
                 stopFrameProcessing();
                 stopAnimation();
                 return;
@@ -72,7 +72,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
             if (!nextFrame) return;
             const { last, entries, number } = nextFrame;
             currentFrameNumber = number;
-            console.log("render frame", number, nextFrame);
+            // console.log("render frame", number, nextFrame);
             updateCursorPositions(entries, cursorMap);
             if (last) {
                 stopNextFrame = true;

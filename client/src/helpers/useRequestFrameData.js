@@ -1,8 +1,8 @@
 import CircularBuffer from "mnemonist/circular-buffer";
 
 export function useRequestFrameData(handleRequestFrames) {
-    const framesPerSecond = 1;
-    const bufferSizeInSeconds = 20;
+    const framesPerSecond = 4;
+    const bufferSizeInSeconds = 15;
     const frameBufferCapacity = framesPerSecond * bufferSizeInSeconds;
     const frameBuffer = new CircularBuffer(Array, frameBufferCapacity);
     let currentTimeoutId = null;
@@ -25,13 +25,13 @@ export function useRequestFrameData(handleRequestFrames) {
         const lastFrame = frameBuffer.peekLast();
 
         if (firstFrame && lastFrame) {
-            console.log(
-                `now in buffer frames ${firstFrame.number}-${lastFrame.number}`
-            );
+            // console.log(
+            //     `now in buffer frames ${firstFrame.number}-${lastFrame.number}`
+            // );
             const { last } = lastFrame;
             highestLoadedFrameNumber = lastFrame.number + 1;
             if (last) {
-                console.log("last frame");
+                // console.log("last frame");
                 unscheduleNextFrameRequest();
             } else {
                 scheduleNextFrameRequest();

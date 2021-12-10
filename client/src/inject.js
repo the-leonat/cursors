@@ -20,7 +20,8 @@ const SILENT = process.env.SILENT !== undefined;
         SILENT
     );
     console.log("inject");
-    // trackCursor(handleCursorTracked);
+    const { start: startTracking, stop: stopTracking } =
+        trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
     const { resourceId, changed } = getResourceId();
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(
@@ -41,11 +42,15 @@ const SILENT = process.env.SILENT !== undefined;
 
     function handleRenderInfo(_data) {
         const { currentFrameNumber, highestLoadedFrameNumber } = _data;
-        updateRenderInfo(currentFrameNumber, highestLoadedFrameNumber, getLastFrameNumber());
+        updateRenderInfo(
+            currentFrameNumber,
+            highestLoadedFrameNumber,
+            getLastFrameNumber()
+        );
     }
 
-    function handleCursorTracked(_frameNumber) {
-        updateTrackInfo(_frameNumber);
+    function handleCursorTracked(_frameNumber, _persistedFrameNumber) {
+        updateTrackInfo(_frameNumber, _persistedFrameNumber);
     }
 
     function handleFrameProcessing(_isProcessing, _from, _to) {
@@ -56,12 +61,14 @@ const SILENT = process.env.SILENT !== undefined;
         worker.post({
             type: "stop",
         });
+        stopTracking();
     }
 
     function handleStart() {
         worker.post({
             type: "start",
         });
+        startTracking();
     }
 
     async function handleFramesRequest(_eventData) {
