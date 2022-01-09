@@ -1,3 +1,23 @@
+// polyfill OffscreenCanvas
+
+if (typeof window !== "undefined" && !window.OffscreenCanvas) {
+    window.OffscreenCanvas = class OffscreenCanvas {
+        constructor(width, height) {
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            this.canvas.convertToBlob = () => {
+                return new Promise((resolve) => {
+                    this.canvas.toBlob(resolve);
+                });
+            };
+
+            return this.canvas;
+        }
+    };
+}
+
 export default async function createCursorCanvas(imageUrlData) {
     const offscreenCanvas = new OffscreenCanvas(1, 1);
     const imageData = await fetch(imageUrlData).then((res) => res.blob());

@@ -40,6 +40,7 @@ module.exports = function (workerUrl, canvas, listener) {
                 canvas: canvas,
                 width: canvas.clientWidth,
                 height: canvas.clientHeight,
+                devicePixelRatio: window.devicePixelRatio || 1,
             });
         };
 

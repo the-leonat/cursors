@@ -2,11 +2,7 @@ export default function useAnimationLoop(callbackFunction, fps) {
     let stopNext, fpsInterval, then, elapsed, running;
 
     function raf(_callback) {
-        if (typeof window !== "undefined")
-            window.requestAnimationFrame(_callback);
-        else {
-            setTimeout(_callback, fpsInterval);
-        }
+        setTimeout(_callback, fpsInterval);
     }
 
     function start(...args) {
