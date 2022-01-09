@@ -19,7 +19,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev": "parcel watch",
-        "build": "parcel build"
+        "build": "rm -rf ./dist && parcel build"
     },
     "author": "Leonard Puhl",
     "license": "ISC",

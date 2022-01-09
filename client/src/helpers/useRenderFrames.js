@@ -1,6 +1,8 @@
 import useAnimationLoop from "./useAnimationLoop";
 import createCursorCanvas from "./createCursorCanvas";
 import cursorImageUrlData from "data-url:../../assets/cursor-small.png";
+import cursorImage2XUrlData from "data-url:../../assets/cursor-small_2x.png";
+
 import Cursor from "../model/Cursor";
 import { ANIMATION_FPS, TRACKING_FPS } from "../config";
 
@@ -26,19 +28,15 @@ function updateCursorPositions(frame, cursorMap, updateAfterResize = false) {
     });
 }
 
-export function useRenderFrames(getNextFrame, initializedCallback) {
+export function useRenderFrames(getNextFrame, onInitialized) {
     const cursorMap = new Map();
     // state
     let cursorCanvas;
     let currentFrameNumber = 0;
+    let devicePixelRatio = 1;
     let canvas;
     let stopNextFrame = false;
     let fps = 0;
-
-    createCursorCanvas(cursorImageUrlData).then((_canvas) => {
-        initializedCallback();
-        cursorCanvas = _canvas;
-    });
 
     const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(
         (delta, cx) => {
@@ -46,20 +44,17 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
             if (!cursorCanvas) return;
             cursorMap.forEach((cursor, cursorId) => {
                 const shouldDelete = cursor.update(delta);
-                cursor.renderClearCanvas(cx, cursorCanvas);
+                cursor.renderClearCanvas(cx, cursorCanvas, devicePixelRatio);
 
                 if (shouldDelete) {
                     cursorMap.delete(cursorId);
-                    // console.log("delete cursor", cursorId);
                 }
             });
+            // update fps value
             fps = 1000 / delta;
-
-            // console.log("after update", performance.now() - time);
             cursorMap.forEach((cursor) => {
-                cursor.renderDrawCanvas(cx, cursorCanvas);
+                cursor.renderDrawCanvas(cx, cursorCanvas, devicePixelRatio);
             });
-            // console.log("after render", performance.now() - time);
         },
         ANIMATION_FPS
     );
@@ -80,6 +75,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
             updateCursorPositions(entries, cursorMap);
             if (last) {
                 stopNextFrame = true;
+                console.log("last frame rendered");
             }
         }, TRACKING_FPS);
 
@@ -101,16 +97,23 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
         canvas.height = _height;
     }
 
-    function setCanvas(_canvas) {
+    async function initialize(_canvas, _devicePixelRatio) {
         canvas = _canvas;
+        devicePixelRatio = _devicePixelRatio;
+        const imageData =
+            _devicePixelRatio > 1 ? cursorImage2XUrlData : cursorImageUrlData;
+        cursorCanvas = await createCursorCanvas(imageData);
+        onInitialized();
     }
 
     function start() {
         if (!canvas) {
             throw "canvas is not set!";
         }
+        console.log("start");
         stopNextFrame = false;
         const cx = canvas.getContext("2d");
+
         startAnimation(cx);
         startFrameProcessing();
         // clear canvas once
@@ -128,7 +131,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
         start,
         stop,
         getFPS,
-        setCanvas,
+        initialize,
         resizeCanvas,
         getCurrentFrameNumber,
     };

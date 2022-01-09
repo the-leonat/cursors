@@ -1,5 +1,3 @@
-
-
 export default async function createCursorCanvas(imageUrlData) {
     const offscreenCanvas = new OffscreenCanvas(1, 1);
     const imageData = await fetch(imageUrlData).then((res) => res.blob());

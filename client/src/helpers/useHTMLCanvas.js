@@ -21,8 +21,9 @@ export async function useHTMLCanvas(handleCanvasResize) {
     function adjustCanvasSize(initial = false) {
         return new Promise((resolve) => {
             fastdom.measure(() => {
-                const width = document.body.offsetWidth;
-                const height = getDocumentHeight();
+                const pixelRatio = window.devicePixelRatio || 1;
+                const width = document.body.offsetWidth * pixelRatio;
+                const height = getDocumentHeight() * pixelRatio;
                 if (!initial) handleCanvasResize(width, height);
                 else {
                     canvas.width = width;

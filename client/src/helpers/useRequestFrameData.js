@@ -1,10 +1,10 @@
 import CircularBuffer from "mnemonist/circular-buffer";
-import { TRACKING_FPS } from "../config"
+import { TRACKING_FPS } from "../config";
 
 export function useRequestFrameData(handleRequestFrames) {
     const bufferSizeInSeconds = 15;
     const frameBufferCapacity = TRACKING_FPS * bufferSizeInSeconds;
-    console.log(frameBufferCapacity)
+    console.log(frameBufferCapacity);
     const frameBuffer = new CircularBuffer(Array, frameBufferCapacity);
     let currentTimeoutId = null;
     let highestLoadedFrameNumber = 0;
@@ -32,7 +32,7 @@ export function useRequestFrameData(handleRequestFrames) {
             const { last } = lastFrame;
             highestLoadedFrameNumber = lastFrame.number + 1;
             if (last) {
-                // console.log("last frame");
+                console.log("last frame loaded");
                 unscheduleNextFrameRequest();
             } else {
                 scheduleNextFrameRequest();
@@ -60,8 +60,9 @@ export function useRequestFrameData(handleRequestFrames) {
             const from = highestLoadedFrameNumber;
             const to = highestLoadedFrameNumber + emptyBufferSize;
             handleRequestFrames(from, to);
+        } else {
+            scheduleNextFrameRequest();
         }
-        scheduleNextFrameRequest();
     }
 
     function getFrame() {
@@ -81,6 +82,6 @@ export function useRequestFrameData(handleRequestFrames) {
         getFrame,
         resetFrameBuffer,
         startRequest,
-        getHighestLoadedFrameNumber
+        getHighestLoadedFrameNumber,
     };
 }

@@ -56,7 +56,6 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         const { left, top, width, height } = dimensionsCache.has(node)
             ? dimensionsCache.get(node)
             : getAndPersist();
-
         const absX = left + width * relX;
         const absY = top + height * relY;
         const dimensions = {

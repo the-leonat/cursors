@@ -163,7 +163,7 @@ export default class Cursor {
     renderClearCanvas(
         cx: CanvasRenderingContext2D,
         cursorImage: CanvasImageSource,
-        force: boolean = false
+        scale: number
     ) {
         // return;
         const p = 2;
@@ -171,13 +171,18 @@ export default class Cursor {
         const h = cursorImage.height;
         const [prevX, prevY] = this.movement.getPreviousPosition();
         if (typeof w != "number" || typeof h !== "number") return;
-        cx.clearRect(prevX - p, prevY - p, w + p * 2, h + p * 2);
+        cx.clearRect(
+            prevX * scale - p,
+            prevY * scale - p,
+            w + p * 2,
+            h + p * 2
+        );
     }
 
     renderDrawCanvas(
         cx: CanvasRenderingContext2D,
         cursorImage: CanvasImageSource,
-        force: boolean = false
+        scale: number
     ) {
         // cx.strokeStyle = "#000"; //Red
         // cx.lineWidth = 1;
@@ -186,6 +191,10 @@ export default class Cursor {
         // cx.lineTo(this.x, this.y);
         // cx.stroke();
         const [x, y] = this.movement.getPosition();
-        cx.drawImage(cursorImage, x, y);
+        const w = cursorImage.width;
+        const h = cursorImage.height;
+        if (typeof w != "number" || typeof h !== "number") return;
+
+        cx.drawImage(cursorImage, x * scale, y * scale);
     }
 }

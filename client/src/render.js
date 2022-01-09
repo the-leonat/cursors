@@ -13,9 +13,9 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         getHighestLoadedFrameNumber,
     } = useRequestFrameData(handleRequestFrames);
     const {
-        start,
+        start: startRender,
         stop,
-        setCanvas,
+        initialize,
         getCurrentFrameNumber,
         resizeCanvas,
         getFPS,
@@ -57,8 +57,9 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             const { data } = _event;
             handleIncomingFrames(data);
         } else if (_event.data.canvas) {
-            const canvas = _event.data.canvas;
-            setCanvas(canvas);
+            const { canvas, devicePixelRatio } = _event.data;
+            console.log(_event.data);
+            initialize(canvas, devicePixelRatio);
         } else if (_event.data.type === "resize") {
             const { width, height } = _event.data;
             const frameNumber = getCurrentFrameNumber();
@@ -69,7 +70,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         } else if (_event.data.type === "start") {
             const frameNumber = getCurrentFrameNumber();
             startRequest(frameNumber);
-            start();
+            startRender();
         } else {
             throw "unrecognized event";
         }

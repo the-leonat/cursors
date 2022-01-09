@@ -8,7 +8,7 @@ import trackCursor from "./track";
 
 const SILENT = process.env.SILENT !== undefined;
 
-(async function () {
+const run = async function () {
     if (window.injected) {
         console.log("already injected");
         return;
@@ -28,6 +28,7 @@ const SILENT = process.env.SILENT !== undefined;
         handleFrameProcessing
     );
     const canvas = await useHTMLCanvas(handleCanvasResize);
+    console.log("create worker");
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
 
     function handleCanvasResize(_newWidth, _newHeight) {
@@ -97,4 +98,6 @@ const SILENT = process.env.SILENT !== undefined;
             handleRenderInfo(_event.data);
         }
     }
-})();
+};
+
+run();
