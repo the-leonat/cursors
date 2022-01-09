@@ -58,7 +58,6 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             handleIncomingFrames(data);
         } else if (_event.data.canvas) {
             const { canvas, devicePixelRatio } = _event.data;
-            console.log(_event.data);
             initialize(canvas, devicePixelRatio);
         } else if (_event.data.type === "resize") {
             const { width, height } = _event.data;

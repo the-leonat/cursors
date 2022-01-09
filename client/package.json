@@ -7,6 +7,7 @@
         "crypto-js": "^4.0.0",
         "fastdom": "^1.0.10",
         "mnemonist": "^0.38.3",
+        "svelte": "^3.45.0",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
@@ -14,7 +15,8 @@
         "@parcel/transformer-inline-string": "^2.0.1",
         "lib": "^4.3.3",
         "parcel": "^2.0.1",
-        "parcel-reporter-static-files-copy": "github:Drecu/parcel-reporter-static-files-copy"
+        "parcel-reporter-static-files-copy": "github:Drecu/parcel-reporter-static-files-copy",
+        "parcel-transformer-svelte": "^1.2.3"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

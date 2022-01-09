@@ -24,7 +24,6 @@ const run = async function () {
         handleFrameProcessing
     );
     const canvas = await useHTMLCanvas(handleCanvasResize);
-    console.log("create worker");
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
 
     function handleCanvasResize(_newWidth, _newHeight) {
