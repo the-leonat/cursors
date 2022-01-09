@@ -151,8 +151,8 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
         // _onFrameProcessing(true, index, length);
         _onFrameProcessing(true, 0, frames.length);
         let countProcessed = 0;
-        const processedFrames = await Promise.all(frames.map(
-            async ({ t: frameTime, frame: entries }, _index) => {
+        const processedFrames = await Promise.all(
+            frames.map(async ({ t: frameTime, frame: entries }, _index) => {
                 if (!entries) return null;
 
                 const from = window.performance.now();
@@ -163,10 +163,10 @@ export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
                 countProcessed++;
                 _onFrameProcessing(true, countProcessed, frames.length);
                 const d = window.performance.now() - from;
-                console.log(`processed frame ${frameTime} in ${d}ms`);
+                // console.log(`processed frame ${frameTime} in ${d}ms`);
                 return processedFrame;
-            }
-        ));
+            })
+        );
         _onFrameProcessing(false);
         return processedFrames;
     }

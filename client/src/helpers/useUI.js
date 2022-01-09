@@ -26,14 +26,17 @@ export function useUI(handleStart, handleStop, hide) {
     const processingInfo = {
         isProcessing: false,
     };
-    const renderInfo = {
+    let renderInfo = {
+        currentCursorCount: -1,
         currentFrameNumber: -1,
         highestLoadedFrameNumber: -1,
-        lastFrameNumber: -1
+        lastFrameNumber: -1,
+        fps: -1,
     };
     const trackInfo = {
-        frameNumber: -1
-    }
+        frameNumber: -1,
+        persistedFrameNumber: -1,
+    };
 
     function updateProcessingInfo(_isProcessing, _from, _to) {
         processingInfo.isProcessing = _isProcessing;
@@ -44,14 +47,11 @@ export function useUI(handleStart, handleStop, hide) {
         updateUI();
     }
 
-    function updateRenderInfo(
-        _currentFrameNumber,
-        _highestLoadedFrameNumber,
-        _lastFrameNumber
-    ) {
-        renderInfo.currentFrameNumber = _currentFrameNumber;
-        renderInfo.highestLoadedFrameNumber = _highestLoadedFrameNumber;
-        renderInfo.lastFrameNumber = _lastFrameNumber;
+    function updateRenderInfo(object) {
+        renderInfo = {
+            ...renderInfo,
+            ...object,
+        };
         updateUI();
     }
 
@@ -69,13 +69,15 @@ export function useUI(handleStart, handleStop, hide) {
                 currentFrameNumber,
                 highestLoadedFrameNumber,
                 lastFrameNumber,
+                fps,
             } = renderInfo;
-            const {frameNumber: trackedFrameNumber, persistedFrameNumber} = trackInfo;
+            const { frameNumber: trackedFrameNumber, persistedFrameNumber } =
+                trackInfo;
             const processingText = isProcessing
                 ? `processing (${from}/${to}}`
                 : "";
-            const renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber})`;
-            const trackText = `track (${persistedFrameNumber}/${trackedFrameNumber})`
+            const renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber}) fps ${fps.toFixed()}`;
+            const trackText = `track (${persistedFrameNumber}/${trackedFrameNumber})`;
             const text = `${trackText} ${renderText} ${processingText}`;
             span.textContent = text;
         });
@@ -115,6 +117,6 @@ export function useUI(handleStart, handleStop, hide) {
     return {
         updateProcessingInfo,
         updateRenderInfo,
-        updateTrackInfo
+        updateTrackInfo,
     };
 }

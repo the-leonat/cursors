@@ -17,9 +17,8 @@ const SILENT = process.env.SILENT !== undefined;
     const { updateProcessingInfo, updateRenderInfo, updateTrackInfo } = useUI(
         handleStart,
         handleStop,
-        SILENT
+        false
     );
-    console.log("inject");
     const { start: startTracking, stop: stopTracking } =
         trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
@@ -41,12 +40,13 @@ const SILENT = process.env.SILENT !== undefined;
     }
 
     function handleRenderInfo(_data) {
-        const { currentFrameNumber, highestLoadedFrameNumber } = _data;
-        updateRenderInfo(
+        const { currentFrameNumber, highestLoadedFrameNumber, fps } = _data;
+        updateRenderInfo({
             currentFrameNumber,
             highestLoadedFrameNumber,
-            getLastFrameNumber()
-        );
+            lastFrameNumber: getLastFrameNumber(),
+            fps,
+        });
     }
 
     function handleCursorTracked(_frameNumber, _persistedFrameNumber) {

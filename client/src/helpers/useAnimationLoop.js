@@ -2,13 +2,16 @@ export default function useAnimationLoop(callbackFunction, fps) {
     let stopNext, fpsInterval, then, elapsed, running;
 
     function raf(_callback) {
-        if (typeof window !== "undefined") window.requestAnimationFrame(_callback);
-        else setTimeout(_callback, fpsInterval)
+        if (typeof window !== "undefined")
+            window.requestAnimationFrame(_callback);
+        else {
+            setTimeout(_callback, fpsInterval);
+        }
     }
 
     function start(...args) {
         if (running) {
-            console.error ("called start but was already running")
+            console.error("called start but was already running");
             return;
         }
         running = true;
@@ -20,10 +23,11 @@ export default function useAnimationLoop(callbackFunction, fps) {
             const now = _now || performance.now(); // check if parameter is passed (only in raf)
             if (stopNext) return;
             raf(invoke);
-
             elapsed = now - then;
-            if (elapsed <= fpsInterval) return;
-            then = now - (elapsed % fpsInterval);
+            then = now;
+            // console.log(elapsed);
+            // if (elapsed <= fpsInterval) return;
+            // then = now - (elapsed % fpsInterval);
             callbackFunction(elapsed, ...args);
         }
         raf(invoke);

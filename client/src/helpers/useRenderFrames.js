@@ -1,6 +1,6 @@
 import useAnimationLoop from "./useAnimationLoop";
 import createCursorCanvas from "./createCursorCanvas";
-import cursorImageUrlData from "data-url:../../assets/cursor.png";
+import cursorImageUrlData from "data-url:../../assets/cursor-small.png";
 import Cursor from "../model/Cursor";
 import { ANIMATION_FPS, TRACKING_FPS } from "../config";
 
@@ -33,6 +33,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
     let currentFrameNumber = 0;
     let canvas;
     let stopNextFrame = false;
+    let fps = 0;
 
     createCursorCanvas(cursorImageUrlData).then((_canvas) => {
         initializedCallback();
@@ -46,14 +47,19 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
             cursorMap.forEach((cursor, cursorId) => {
                 const shouldDelete = cursor.update(delta);
                 cursor.renderClearCanvas(cx, cursorCanvas);
+
                 if (shouldDelete) {
                     cursorMap.delete(cursorId);
                     // console.log("delete cursor", cursorId);
                 }
             });
+            fps = 1000 / delta;
+
+            // console.log("after update", performance.now() - time);
             cursorMap.forEach((cursor) => {
                 cursor.renderDrawCanvas(cx, cursorCanvas);
             });
+            // console.log("after render", performance.now() - time);
         },
         ANIMATION_FPS
     );
@@ -79,6 +85,10 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
 
     function getCurrentFrameNumber() {
         return currentFrameNumber;
+    }
+
+    function getFPS() {
+        return fps;
     }
 
     function clearCanvas() {
@@ -117,6 +127,7 @@ export function useRenderFrames(getNextFrame, initializedCallback) {
     return {
         start,
         stop,
+        getFPS,
         setCanvas,
         resizeCanvas,
         getCurrentFrameNumber,

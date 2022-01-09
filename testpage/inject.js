@@ -1,0 +1,1 @@
+../client/dist/standalone/inject.js

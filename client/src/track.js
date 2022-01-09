@@ -1,9 +1,10 @@
 // this is the code which will be injected into a given page...
-import { v4 as uuidv4 } from "uuid";
 import sha256 from "crypto-js/sha256";
 import useStorage from "./helpers/useStorage";
 import useRelativeMousePosition from "./helpers/useRelativeMousePosition";
 import { TRACKING_FPS } from "./config";
+import { useUserId } from "./helpers/useUserId";
+import { useCreateFakeData } from "./helpers/useCreateFakeData";
 
 function useTimePassed() {
     let startTime;
@@ -66,27 +67,6 @@ export function useResourceId() {
     return getResourceId;
 }
 
-function useUserId() {
-    let userId;
-
-    function reset() {
-        userId = uuidv4();
-    }
-
-    function getUserId() {
-        return userId;
-    }
-
-    //pw:G3ginL3Ehd3yBT
-
-    reset();
-
-    return {
-        getUserId,
-        reset,
-    };
-}
-
 function useBufferedPersist(_bufferSize) {
     let buffer = [];
     const { persistMultiple } = useStorage();
@@ -96,19 +76,19 @@ function useBufferedPersist(_bufferSize) {
         buffer = [];
     }
 
-    function persist(data) {
+    function persist(...data) {
         if (buffer.length > _bufferSize) {
             persistImmediate();
         }
-        buffer.push(data);
+        buffer.push(...data);
     }
 
     function flush() {
         persistImmediate();
     }
 
-    window.onbeforeunload = function() {
-        console.log("persist before leave")
+    window.onbeforeunload = function () {
+        console.log("persist before leave");
         persistImmediate();
         return;
     };
@@ -120,7 +100,10 @@ export default function trackCursor(onCursorTrack) {
     const { getRelativeMousePosition } = useRelativeMousePosition();
     const { getUserId, reset: resetUserId } = useUserId();
     const getResourceId = useResourceId();
-    const { persist, flush } = useBufferedPersist(4 * 4);
+    const { persist, flush } = useBufferedPersist(3 * 4);
+    const generateFakeData = useCreateFakeData();
+    const fakedata = generateFakeData(getResourceId().resourceId, 500, 20);
+    // persist(...fakedata);
     let frameNumber = 0;
     let persistedFrameNumber = 0;
     let lastMousePositionX = 0;
@@ -135,33 +118,40 @@ export default function trackCursor(onCursorTrack) {
 
     async function tick() {
         const { resourceId, changed: resourceIdChanged } = getResourceId();
-        const { xPath, relX, relY, absX, absY } =
-            await getRelativeMousePosition();
-        const persistPosition = shouldPersist(absX, absY);
+        try {
+            const { xPath, relX, relY, absX, absY } =
+                await getRelativeMousePosition();
+            const persistPosition = shouldPersist(absX, absY);
 
-        if (resourceIdChanged) {
-            resetUserId();
-            flush();
-            frameNumber = 0;
-            persistedFrameNumber = 0;
-        } else if (persistPosition) {
-            const userId = getUserId();
-            persistedFrameNumber += 1;
-            lastMousePositionX = absX;
-            lastMousePositionY = absY;
-            persist({
-                user_id: userId,
-                resource_id: resourceId,
-                xpath: xPath,
-                x: relX,
-                y: relY,
-                time: frameNumber,
-            });
+            if (resourceIdChanged) {
+                resetUserId();
+                flush();
+                frameNumber = 0;
+                persistedFrameNumber = 0;
+            } else if (persistPosition) {
+                const userId = getUserId();
+                persistedFrameNumber += 1;
+                lastMousePositionX = absX;
+                lastMousePositionY = absY;
+                persist({
+                    user_id: userId,
+                    resource_id: resourceId,
+                    xpath: xPath,
+                    x: relX,
+                    y: relY,
+                    time: frameNumber,
+                });
+            }
+            frameNumber += 1;
+            onCursorTrack(frameNumber, persistedFrameNumber); // console.log("tracked", frameNumber);
+        } catch (test) {
+            console.error(test);
         }
-        frameNumber += 1;
-        onCursorTrack(frameNumber, persistedFrameNumber);        // console.log("tracked", frameNumber);
     }
-    const { start: startClock, destroy: stopClock } = useClock(tick, 1000 / TRACKING_FPS);
+    const { start: startClock, destroy: stopClock } = useClock(
+        tick,
+        1000 / TRACKING_FPS
+    );
     function start() {
         startClock();
     }

@@ -1,3 +1,5 @@
+import { TRACKING_FPS } from "../config";
+
 function easeInOut(t: number) {
     return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
 }
@@ -21,7 +23,11 @@ interface Movement {
 
 class CurvedMovement implements Movement {
     tick: (delta: number) => void;
-    move: (_start: [number, number], _end: [number, number], _duration: number) => void;
+    move: (
+        _start: [number, number],
+        _end: [number, number],
+        _duration: number
+    ) => void;
     updateEndPosition: (_pos: [number, number]) => void;
     getPosition: () => [number, number];
     getPreviousPosition: () => [number, number];
@@ -39,17 +45,25 @@ class LinearMovement implements Movement {
     private fromY: number;
     private subX: number;
     private subY: number;
-    private t: number;
+    private t: number = 0;
     private duration: number;
-    private hasStarted: boolean;
+    private randomOffset = -Math.random() * TRACKING_FPS;
+    // private randomOffset = 0;
 
+    private movementChain: Parameters<Movement["move"]>[] = [];
     tick: (delta: number) => void = (_delta) => {
+        if (!this.hasStarted()) {
+            this.randomOffset += _delta;
+            return;
+        }
+        if (this.movementChain.length > 0) {
+            if (this.isDone() || this.t === 0)
+                this.moveNow(...this.movementChain.shift());
+        }
         this._saveOldPosition();
-        this.t = clamp(this.t + _delta / this.duration);
-        // const easedT = easeInOut(this.t);
-        const easedT = this.t;
-        const dx = this.subX * easedT;
-        const dy = this.subY * easedT;
+        this.t = this.t + _delta / this.duration;
+        const dx = this.subX * clamp(this.t);
+        const dy = this.subY * clamp(this.t);
         this.x = this.fromX + Math.floor(dx);
         this.y = this.fromY + Math.floor(dy);
     };
@@ -71,7 +85,14 @@ class LinearMovement implements Movement {
         _end: [number, number],
         _duration: number
     ) => void = (_start, _end, _duration) => {
-        this.hasStarted = true;
+        this.movementChain.push([_start, _end, _duration]);
+    };
+
+    moveNow = (
+        _start: [number, number],
+        _end: [number, number],
+        _duration: number
+    ) => {
         this.t = 0;
         this.duration = _duration; // in frames
         this.fromX = Math.floor(_start[0]);
@@ -90,8 +111,12 @@ class LinearMovement implements Movement {
         return [this.oldX, this.oldY];
     };
 
+    hasStarted: () => boolean = () => {
+        return this.randomOffset >= 0;
+    };
+
     isDone: () => boolean = () => {
-        return this.t === 1;
+        return this.t >= 1;
     };
 }
 

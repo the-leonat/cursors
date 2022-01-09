@@ -10,7 +10,7 @@ export async function useHTMLCanvas(handleCanvasResize) {
     canvas.style.width = "100vw";
     canvas.style.minHeight = "100%";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = 9999;
+    canvas.style.zIndex = 9998;
     // canvas.style.opacity = 0.8;
     // canvas.style.mixBlendMode = "luminosity";
     document.documentElement.style.height = "100%";
@@ -23,8 +23,7 @@ export async function useHTMLCanvas(handleCanvasResize) {
             fastdom.measure(() => {
                 const width = document.body.offsetWidth;
                 const height = getDocumentHeight();
-                if (!initial)
-                    handleCanvasResize(width, height);
+                if (!initial) handleCanvasResize(width, height);
                 else {
                     canvas.width = width;
                     canvas.height = height;
