@@ -14,11 +14,7 @@ const run = async function () {
         return;
     }
     window.injected = true;
-    const { updateProcessingInfo, updateRenderInfo, updateTrackInfo } = useUI(
-        handleStart,
-        handleStop,
-        false
-    );
+    const { updateData } = useUI(handleStart, handleStop, false);
     const { start: startTracking, stop: stopTracking } =
         trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
@@ -42,20 +38,22 @@ const run = async function () {
 
     function handleRenderInfo(_data) {
         const { currentFrameNumber, highestLoadedFrameNumber, fps } = _data;
-        updateRenderInfo({
-            currentFrameNumber,
-            highestLoadedFrameNumber,
-            lastFrameNumber: getLastFrameNumber(),
-            fps,
+        updateData({
+            render: {
+                currentFrameNumber,
+                highestLoadedFrameNumber,
+                lastFrameNumber: getLastFrameNumber(),
+                fps,
+            },
         });
     }
 
-    function handleCursorTracked(_frameNumber, _persistedFrameNumber) {
-        updateTrackInfo(_frameNumber, _persistedFrameNumber);
+    function handleCursorTracked(frameNumber, persistedFrameNumber) {
+        updateData({ track: { frameNumber, persistedFrameNumber } });
     }
 
-    function handleFrameProcessing(_isProcessing, _from, _to) {
-        updateProcessingInfo(_isProcessing, _from, _to);
+    function handleFrameProcessing(isProcessing, from, to) {
+        updateData({ processing: { isProcessing, from, to } });
     }
 
     function handleStop() {

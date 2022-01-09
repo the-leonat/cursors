@@ -103,6 +103,7 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         const imageData =
             _devicePixelRatio > 1 ? cursorImage2XUrlData : cursorImageUrlData;
         cursorCanvas = await createCursorCanvas(imageData);
+        console.log(canvas, cursorCanvas, _devicePixelRatio);
         onInitialized();
     }
 
