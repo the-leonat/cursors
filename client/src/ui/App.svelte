@@ -1,19 +1,30 @@
 <script>
-    export let handleStart, handleStop;
+    import { onDestroy } from "svelte";
     import { dataStore } from "../ui/store";
-
-    $: ({ processing, render, track } = $dataStore);
-    $: ({ isProcessing, from, to } = processing);
-    $: ({ currentFrameNumber, highestLoadedFrameNumber, lastFrameNumber, fps } =
-        render);
-    $: ({ frameNumber: trackedFrameNumber, persistedFrameNumber } = track);
-
-    $: processingText = isProcessing ? `processing (${from}/${to}}` : "";
-    $: renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber}) fps ${fps?.toFixed()}`;
-    $: trackText = `track (${persistedFrameNumber}/${trackedFrameNumber})`;
-    $: dataAsText = `${trackText} ${renderText} ${processingText}`;
+    export let handleStart, handleStop;
 
     let running = false;
+    let label = "";
+
+    const unsubscribe = dataStore.subscribe((data) => {
+        const { processing, render, track } = data;
+        const { isProcessing, from, to } = processing;
+        const {
+            currentFrameNumber,
+            highestLoadedFrameNumber,
+            lastFrameNumber,
+            fps,
+        } = render;
+        const { frameNumber: trackedFrameNumber, persistedFrameNumber } = track;
+
+        const processingText = isProcessing ? `processing (${from}/${to}}` : "";
+        const renderText = `render (${currentFrameNumber}/${highestLoadedFrameNumber}/${lastFrameNumber}) fps ${fps?.toFixed()}`;
+        const trackText = `track (${persistedFrameNumber}/${trackedFrameNumber})`;
+
+        label = `${trackText} ${renderText} ${processingText}`;
+    });
+
+    onDestroy(unsubscribe);
 
     function handleClick() {
         running = !running;
@@ -27,8 +38,7 @@
 
 {#if $dataStore}
     <div>
-        <span>{dataAsText}</span>
-        <span>{isProcessing}</span>
+        <span>{label}</span>
         <button on:click={handleClick}>{running ? "Stop" : "Start"}</button>
     </div>
 {/if}
