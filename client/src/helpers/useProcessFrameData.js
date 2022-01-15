@@ -26,7 +26,8 @@ window.cancelIdleCallback =
 export async function useProcessFrameData(
     _resourceId,
     _onFrameProcessing,
-    _onFrameInfo
+    _onFrameInfo,
+    _onFrameLoading
 ) {
     const nodeCache = new Map();
     const dimensionsCache = new Map();
@@ -41,6 +42,13 @@ export async function useProcessFrameData(
         dimensionsCache.clear();
     }, 500);
 
+    function getNodeDimensionsFromCache(node) {
+        if (dimensionsCache.has(node)) return dimensionsCache.get(node);
+        const dimensions = getElementDimensions(node, false);
+        dimensionsCache.set(node, dimensions);
+        return dimensions;
+    }
+
     function getLastFrameNumber() {
         return lastFrameTime ? lastFrameTime : -1;
     }
@@ -51,15 +59,7 @@ export async function useProcessFrameData(
             return undefined;
         }
 
-        function getAndPersist() {
-            const frames = getElementDimensions(node, false);
-            dimensionsCache.set(node, frames);
-            return frames;
-        }
-
-        const { left, top, width, height } = dimensionsCache.has(node)
-            ? dimensionsCache.get(node)
-            : getAndPersist();
+        const { left, top, width, height } = getNodeDimensionsFromCache(node);
         const absX = left + width * relX;
         const absY = top + height * relY;
         const dimensions = {
@@ -83,7 +83,7 @@ export async function useProcessFrameData(
         );
         const node = frames.singleNodeValue;
         if (!node) {
-            // console.log("node not found:", xPath);
+            console.debug("node not found for xpath", xPath);
             return undefined;
         }
         nodeCache.set(xPath, node);
@@ -145,11 +145,13 @@ export async function useProcessFrameData(
                     entries: [],
                 },
             ];
+        _onFrameLoading(true, _fromFrameNumber, _toFrameNumber);
         const frames = await getFrames(
             _resourceId,
             _fromFrameNumber,
             _toFrameNumber
         );
+        _onFrameLoading(false);
         // ToDo: maybe use map statement
         // _onFrameProcessing(true, index, length);
         _onFrameProcessing(true, 0, frames.length);
