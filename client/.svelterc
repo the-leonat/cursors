@@ -1,0 +1,6 @@
+{
+    "compilerOptions": {
+        "css": true,
+        "enableSourcemap": false
+    }
+}
