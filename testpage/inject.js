@@ -1,1 +1,1 @@
-../client/dist/standalone/inject.js
+../client/dist/inject.js
