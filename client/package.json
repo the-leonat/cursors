@@ -37,7 +37,7 @@
                 "src/background.js"
             ],
             "distDir": "dist",
-            "sourceMap": false,
+            "sourceMap": true,
             "engines": {
                 "browsers": "last 2 Chrome versions",
                 "optimize": "true",
