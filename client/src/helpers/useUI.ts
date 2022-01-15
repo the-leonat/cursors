@@ -1,6 +1,6 @@
 import { dataStore, UIData } from "../ui/store";
 // @ts-expect-error
-import App from "../ui/App.svelte";
+import Popup from "../ui/Popup.svelte";
 
 // todo convert to typescript
 // x todo dont update position when cursor is only slightly different in position
@@ -40,11 +40,18 @@ export function useUI(handleStart: () => void, handleStop: () => void) {
                 ...currentData.track,
                 ..._data?.track,
             },
+            loading: {
+                ...currentData.loading,
+                ..._data?.loading,
+            },
         }));
     }
 
-    const app = new App({
-        target: document.body,
+    const elem = document.body.appendChild(document.createElement("div"));
+    const shadowRoot = elem.attachShadow({ mode: "closed" });
+
+    const app = new Popup({
+        target: shadowRoot,
         props: {
             handleStart,
             handleStop,

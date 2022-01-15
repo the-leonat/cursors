@@ -23,7 +23,8 @@ const run = async function () {
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(
         resourceId,
         handleFrameProcessing,
-        handleFrameInfoLoaded
+        handleFrameInfoLoaded,
+        handleFrameLoading
     );
     const canvas = await useHTMLCanvas(handleCanvasResize);
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
@@ -43,6 +44,24 @@ const run = async function () {
             width: _newWidth,
             height: _newHeight,
         });
+    }
+
+    function handleFrameLoading(_loading, _from, _to) {
+        if (_loading) {
+            updateUIState({
+                loading: {
+                    isLoading: true,
+                    from: _from,
+                    to: _to,
+                },
+            });
+        } else {
+            updateUIState({
+                loading: {
+                    isLoading: false,
+                },
+            });
+        }
     }
 
     function handleRenderInfo(_data) {

@@ -18,6 +18,11 @@ export interface UIData {
         frameNumber: number;
         persistedFrameNumber: number;
     }>;
+    loading: Partial<{
+        isLoading: boolean;
+        from: number;
+        to: number;
+    }>;
 }
 
 export const dataStore = writable<UIData>({
@@ -27,4 +32,5 @@ export const dataStore = writable<UIData>({
     },
     processing: {},
     track: {},
+    loading: {},
 });

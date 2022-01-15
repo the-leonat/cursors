@@ -1,22 +1,21 @@
 <script>
     import { onDestroy, afterUpdate } from "svelte";
     import Timeline from "./Timeline.svelte";
+    import DebugInfo from "./DebugInfo.svelte";
     import { dataStore } from "../ui/store";
     import cursorImage2XUrlData from "data-url:../../assets/cursor-small_2x.png";
     export let handleStart, handleStop;
 
     let visible = false;
+    let showDebugInfo = false;
     let timelineProps = {
         frameCurrent: 0,
         frameLoadedTo: 0,
         frameTo: 0,
     };
-    let currentCursorCount = 0;
 
     const unsubscribe = dataStore.subscribe((data) => {
-        const { processing, render, track, isRunning } = data;
-        // const { isProcessing, from, to } = processing;
-        currentCursorCount = render?.currentCursorCount || 0;
+        const { render } = data;
         timelineProps = {
             frameCurrent: render?.currentFrameNumber,
             frameLoadedTo: render?.highestLoadedFrameNumber,
@@ -37,7 +36,7 @@
 </script>
 
 <div
-    data-visible={visible}
+    data-visible={visible || showDebugInfo}
     on:pointerover={() => (visible = true)}
     on:mouseleave={() => (visible = false)}
     on:blur={() => (visible = false)}
@@ -49,13 +48,17 @@
     <button on:click={handleClick}
         >{$dataStore.isRunning ? "Pause" : "Start"}</button
     >
+    <DebugInfo show={showDebugInfo} />
     <p>
-        {currentCursorCount}
-        {($dataStore.render?.fps || 0).toFixed()}
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus fuga
-        mollitia aliquam dolore inventore doloribus tempore, aut illo enim quia expedita
-        natus incidunt, quae nemo temporibus, id et perferendis?
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
+        fuga mollitia aliquam dolore inventore doloribus tempore, aut illo enim
+        quia expedita natus incidunt, quae nemo temporibus, id et perferendis?
     </p>
+
+    <label>
+        <input type="checkbox" bind:checked={showDebugInfo} />
+        show debug info
+    </label>
 </div>
 
 <style>

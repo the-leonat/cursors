@@ -3,7 +3,7 @@
     export let frameCurrent, frameTo, frameLoadedTo;
 
     $: timelineCurrent = frameCurrent / frameTo;
-    $: timelineLoadedTo = frameLoadedTo / frameTo;
+    $: timelineLoadedTo = Math.min(frameLoadedTo / frameTo, 1);
 
     $: timeTo = (frameTo || 0) / TRACKING_FPS;
     $: secondsTo = `${Math.round(timeTo % 60)}`.padStart(2, "0");
@@ -32,6 +32,7 @@
         width: 100%;
         flex-direction: row;
         align-items: center;
+        margin-bottom: 0.5em;
     }
 
     .tick {
