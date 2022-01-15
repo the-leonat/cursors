@@ -26,37 +26,21 @@
     "author": "Leonard Puhl",
     "license": "ISC",
     "staticFiles": {
-        "distDir": "dist/extension",
+        "distDir": "dist",
         "staticPath": "static"
     },
     "targets": {
-        "standalone": {
-            "source": [
-                "src/inject.js"
-            ],
-            "distDir": "dist/standalone",
-            "sourceMap": false,
-            "engines": {
-                "browsers": [
-                    "last 2 Chrome versions"
-                ],
-                "optimize": "true",
-                "context": "browser"
-            }
-        },
-        "chrome-extension": {
+        "default": {
             "source": [
                 "src/inject.js",
                 "src/background.js"
             ],
-            "distDir": "dist/extension",
+            "distDir": "dist",
+            "sourceMap": false,
             "engines": {
-                "browsers": [
-                    "last 2 Chrome versions"
-                ],
+                "browsers": "last 2 Chrome versions",
                 "optimize": "true",
-                "context": "browser",
-                "sourceMap": "true"
+                "context": "browser"
             }
         }
     }
