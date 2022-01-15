@@ -7,6 +7,6 @@ export default function getElementDimensions(el, ignoreScrollPosition = false) {
         top: ignoreScrollPosition ? rect.top : rect.top + scrollTop,
         left: ignoreScrollPosition ? rect.left : rect.left + scrollLeft,
         width: rect.width,
-        height: rect.height,
+        height: rect.height || 1,
     };
 }
