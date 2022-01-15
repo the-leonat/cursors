@@ -15,7 +15,7 @@ const run = async function () {
         return;
     }
     window.injected = true;
-    const { updateData } = useUI(handleStart, handleStop, false);
+    const { updateData: updateUIState } = useUI(handleStart, handleStop);
     const { start: startTracking, stop: stopTracking } =
         trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
@@ -29,7 +29,7 @@ const run = async function () {
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
 
     function handleFrameInfoLoaded(_frameCount) {
-        updateData({
+        updateUIState({
             render: {
                 lastFrameNumber: _frameCount,
             },
@@ -46,26 +46,33 @@ const run = async function () {
     }
 
     function handleRenderInfo(_data) {
-        const { currentFrameNumber, highestLoadedFrameNumber, fps } = _data;
-        updateData({
+        const {
+            currentFrameNumber,
+            highestLoadedFrameNumber,
+            fps,
+            currentCursorCount,
+        } = _data;
+        updateUIState({
             render: {
                 currentFrameNumber,
                 highestLoadedFrameNumber,
                 lastFrameNumber: getLastFrameNumber(),
                 fps,
+                currentCursorCount,
             },
         });
     }
 
     function handleCursorTracked(frameNumber, persistedFrameNumber) {
-        updateData({ track: { frameNumber, persistedFrameNumber } });
+        updateUIState({ track: { frameNumber, persistedFrameNumber } });
     }
 
     function handleFrameProcessing(isProcessing, from, to) {
-        updateData({ processing: { isProcessing, from, to } });
+        updateUIState({ processing: { isProcessing, from, to } });
     }
 
     function handleStop() {
+        console.log("stopped");
         worker.post({
             type: "stop",
         });
@@ -73,10 +80,25 @@ const run = async function () {
     }
 
     function handleStart() {
+        console.log("started");
         worker.post({
             type: "start",
         });
         startTracking();
+    }
+
+    function start() {
+        updateUIState({
+            isRunning: true,
+        });
+        handleStart();
+    }
+
+    function stop() {
+        updateUIState({
+            isRunning: false,
+        });
+        handleStop();
     }
 
     async function handleFramesRequest(_eventData) {
@@ -96,12 +118,12 @@ const run = async function () {
         // console.log("mainthread event", _event)
         if (_event.data.type === "initialized") {
             if (AUTOSTART) {
-                if (Visibility.state() === "prerender") handleStart();
-                Visibility.change((e, state) => {
-                    if (state === "hidden") handleStop();
-                    else if (state === "prerender") handleStart();
-                });
+                if (Visibility.state() === "visible") start();
             }
+            Visibility.change((e, state) => {
+                if (state === "hidden") stop();
+                else if (state === "visible") start();
+            });
             // handleInitialized();
         } else if (_event.data.type === "frames") {
             handleFramesRequest(_event.data);

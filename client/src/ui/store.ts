@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 
 export interface UIData {
+    isRunning: boolean;
     render: Partial<{
         currentCursorCount: number;
         currentFrameNumber: number;
@@ -20,6 +21,7 @@ export interface UIData {
 }
 
 export const dataStore = writable<UIData>({
+    isRunning: false,
     render: {
         currentFrameNumber: 0,
     },

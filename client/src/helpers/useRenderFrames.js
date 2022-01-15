@@ -83,6 +83,10 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         return currentFrameNumber;
     }
 
+    function getCurrentCursorCount() {
+        return cursorMap.size;
+    }
+
     function getFPS() {
         return fps;
     }
@@ -135,5 +139,6 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         initialize,
         resizeCanvas,
         getCurrentFrameNumber,
+        getCurrentCursorCount,
     };
 }

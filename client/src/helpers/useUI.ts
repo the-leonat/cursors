@@ -1,4 +1,3 @@
-import fastdom from "fastdom";
 import { dataStore, UIData } from "../ui/store";
 // @ts-expect-error
 import App from "../ui/App.svelte";
@@ -22,13 +21,13 @@ import App from "../ui/App.svelte";
 // x buffer size == frames per second (usually 1) times buffer time (10)
 // IMPORTANT soft navigation between pages reset data structures
 
-export function useUI(
-    handleStart: () => void,
-    handleStop: () => void,
-    hide: boolean
-) {
+export function useUI(handleStart: () => void, handleStop: () => void) {
     function updateData(_data: Partial<UIData>) {
         dataStore.update((currentData) => ({
+            isRunning:
+                _data.isRunning !== undefined
+                    ? _data.isRunning
+                    : currentData.isRunning,
             render: {
                 ...currentData.render,
                 ..._data?.render,

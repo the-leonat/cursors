@@ -17,6 +17,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         stop,
         initialize,
         getCurrentFrameNumber,
+        getCurrentCursorCount,
         resizeCanvas,
         getFPS,
     } = useRenderFrames(handleGetNextFrame, handleInitialized);
@@ -46,6 +47,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             currentFrameNumber: number,
             highestLoadedFrameNumber: getHighestLoadedFrameNumber() - 1,
             fps: getFPS(),
+            currentCursorCount: getCurrentCursorCount(),
         });
 
         return frame;

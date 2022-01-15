@@ -5,17 +5,18 @@
     import cursorImage2XUrlData from "data-url:../../assets/cursor-small_2x.png";
     export let handleStart, handleStop;
 
-    let running = false;
     let visible = false;
     let timelineProps = {
         frameCurrent: 0,
         frameLoadedTo: 0,
         frameTo: 0,
     };
+    let currentCursorCount = 0;
 
     const unsubscribe = dataStore.subscribe((data) => {
-        const { processing, render, track } = data;
+        const { processing, render, track, isRunning } = data;
         // const { isProcessing, from, to } = processing;
+        currentCursorCount = render?.currentCursorCount || 0;
         timelineProps = {
             frameCurrent: render?.currentFrameNumber,
             frameLoadedTo: render?.highestLoadedFrameNumber,
@@ -26,8 +27,8 @@
     onDestroy(unsubscribe);
 
     function handleClick() {
-        running = !running;
-        if (running) {
+        $dataStore.isRunning = !$dataStore.isRunning;
+        if ($dataStore.isRunning) {
             handleStart();
         } else {
             handleStop();
@@ -45,11 +46,15 @@
         <img slot="icon" src={cursorImage2XUrlData} alt="cursor" />
     </Timeline>
     <!-- <span>{label}</span> -->
-    <button on:click={handleClick}>{running ? "Pause" : "Start"}</button>
+    <button on:click={handleClick}
+        >{$dataStore.isRunning ? "Pause" : "Start"}</button
+    >
     <p>
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
-        fuga mollitia aliquam dolore inventore doloribus tempore, aut illo enim
-        quia expedita natus incidunt, quae nemo temporibus, id et perferendis?
+        {currentCursorCount}
+        {($dataStore.render?.fps || 0).toFixed()}
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus fuga
+        mollitia aliquam dolore inventore doloribus tempore, aut illo enim quia expedita
+        natus incidunt, quae nemo temporibus, id et perferendis?
     </p>
 </div>
 
