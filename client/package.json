@@ -8,7 +8,8 @@
         "fastdom": "^1.0.10",
         "mnemonist": "^0.38.3",
         "svelte": "^3.45.0",
-        "uuid": "^8.3.2"
+        "uuid": "^8.3.2",
+        "visibilityjs": "^2.0.2"
     },
     "devDependencies": {
         "@parcel/optimizer-data-url": "^2.0.1",

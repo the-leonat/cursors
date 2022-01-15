@@ -5,8 +5,9 @@ import { useProcessFrameData } from "./helpers/useProcessFrameData";
 import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
 import workerUrl from "data-url:./render.js";
 import trackCursor from "./track";
+import Visibility from "visibilityjs";
 
-const SILENT = process.env.SILENT !== undefined;
+const AUTOSTART = process.env.SILENT !== undefined;
 
 const run = async function () {
     if (window.injected) {
@@ -94,8 +95,12 @@ const run = async function () {
     function handleWorkerEvent(_event) {
         // console.log("mainthread event", _event)
         if (_event.data.type === "initialized") {
-            if (SILENT) {
-                handleStart();
+            if (AUTOSTART) {
+                if (Visibility.state() === "prerender") handleStart();
+                Visibility.change((e, state) => {
+                    if (state === "hidden") handleStop();
+                    else if (state === "prerender") handleStart();
+                });
             }
             // handleInitialized();
         } else if (_event.data.type === "frames") {
