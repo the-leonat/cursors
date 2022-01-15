@@ -5,7 +5,7 @@
     $: timelineCurrent = frameCurrent / frameTo;
     $: timelineLoadedTo = frameLoadedTo / frameTo;
 
-    $: timeTo = frameTo / TRACKING_FPS;
+    $: timeTo = (frameTo || 0) / TRACKING_FPS;
     $: secondsTo = `${Math.round(timeTo % 60)}`.padStart(2, "0");
     $: timeStringTo = `${Math.floor(timeTo / 60)}:${secondsTo}`;
 
@@ -15,6 +15,7 @@
 </script>
 
 <div class="timeline">
+    <slot name="icon" />
     <div
         class="line"
         style={`--timeline-current: ${timelineCurrent}; --timeline-loaded-to: ${timelineLoadedTo}`}
@@ -34,7 +35,7 @@
     }
 
     .tick {
-        transition: left 0.2s;
+        transition: left 0.5s;
         position: absolute;
         left: calc(var(--timeline-current, 0) * 100%);
         display: block;
@@ -61,7 +62,8 @@
 
     .timelabel {
         font-size: 0.8em;
-        width: 5em;
+        /* width: 5em; */
+        margin-left: 0.5em;
         text-align: right;
     }
 </style>

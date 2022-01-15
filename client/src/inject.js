@@ -21,10 +21,19 @@ const run = async function () {
     const { resourceId, changed } = getResourceId();
     const { getFrames, getLastFrameNumber } = await useProcessFrameData(
         resourceId,
-        handleFrameProcessing
+        handleFrameProcessing,
+        handleFrameInfoLoaded
     );
     const canvas = await useHTMLCanvas(handleCanvasResize);
     const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
+
+    function handleFrameInfoLoaded(_frameCount) {
+        updateData({
+            render: {
+                lastFrameNumber: _frameCount,
+            },
+        });
+    }
 
     function handleCanvasResize(_newWidth, _newHeight) {
         if (!worker) return;

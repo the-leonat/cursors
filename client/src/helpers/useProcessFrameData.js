@@ -23,14 +23,18 @@ window.cancelIdleCallback =
         clearTimeout(id);
     };
 
-export async function useProcessFrameData(_resourceId, _onFrameProcessing) {
+export async function useProcessFrameData(
+    _resourceId,
+    _onFrameProcessing,
+    _onFrameInfo
+) {
     const nodeCache = new Map();
     const dimensionsCache = new Map();
 
     const { getFrames, getLastFrameTimePerCursor } = useStorage();
     const { lastFrameTime, lastFrameTimePerCursorDict } =
         await getLastFrameTimePerCursor(_resourceId);
-
+    _onFrameInfo(lastFrameTime);
     // console.log("lastFrameTime", lastFrameTime);
 
     const clearDimensionsCache = useDeferedCallback(() => {

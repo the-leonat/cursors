@@ -20,7 +20,9 @@ export interface UIData {
 }
 
 export const dataStore = writable<UIData>({
-    render: {},
+    render: {
+        currentFrameNumber: 0,
+    },
     processing: {},
     track: {},
 });

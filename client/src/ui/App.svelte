@@ -35,25 +35,23 @@
     }
 </script>
 
-{#if $dataStore}
-    <div
-        data-visible={visible}
-        on:pointerover={() => (visible = true)}
-        on:mouseleave={() => (visible = false)}
-        on:blur={() => (visible = false)}
-    >
-        <img src={cursorImage2XUrlData} alt="cursor" />
-        <Timeline {...timelineProps} />
-        <!-- <span>{label}</span> -->
-        <button on:click={handleClick}>{running ? "Pause" : "Start"}</button>
-        <p>
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
-            fuga mollitia aliquam dolore inventore doloribus tempore, aut illo
-            enim quia expedita natus incidunt, quae nemo temporibus, id et
-            perferendis?
-        </p>
-    </div>
-{/if}
+<div
+    data-visible={visible}
+    on:pointerover={() => (visible = true)}
+    on:mouseleave={() => (visible = false)}
+    on:blur={() => (visible = false)}
+>
+    <Timeline {...timelineProps}>
+        <img slot="icon" src={cursorImage2XUrlData} alt="cursor" />
+    </Timeline>
+    <!-- <span>{label}</span> -->
+    <button on:click={handleClick}>{running ? "Pause" : "Start"}</button>
+    <p>
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
+        fuga mollitia aliquam dolore inventore doloribus tempore, aut illo enim
+        quia expedita natus incidunt, quae nemo temporibus, id et perferendis?
+    </p>
+</div>
 
 <style>
     p {
@@ -61,6 +59,7 @@
     }
     img {
         width: 1.5em;
+        margin-right: 0.5em;
         transform: scale(-1, 1);
     }
     div[data-visible="true"] {
@@ -76,9 +75,10 @@
         min-height: 30vh;
         max-height: 50vh;
         z-index: 9999;
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba(175, 246, 255, 0.5);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(0, 0, 0, 0.5);
+        /* border: 1px solid rgba(0, 0, 0, 0.1); */
+        box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.2);
         font-family: "Arial";
         font-weight: bold;
         border-radius: 1em;
