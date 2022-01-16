@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "",
     "dependencies": {
-        "@supabase/supabase-js": "^1.11.16",
+        "@supabase/supabase-js": "^1.29.1",
         "crypto-js": "^4.0.0",
         "fastdom": "^1.0.10",
         "mnemonist": "^0.38.3",
