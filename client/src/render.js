@@ -42,6 +42,8 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
     function handleReset() {
         stop();
         resetFrameBuffer(0);
+        // startRequest();
+        // startRender();
     }
 
     function handleGetNextFrame() {

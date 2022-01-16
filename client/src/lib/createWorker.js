@@ -1,3 +1,5 @@
+const { getDevicePixelRatio } = require("../config");
+
 module.exports = function (workerUrl, canvas, listener) {
     if (canvas.transferControlToOffscreen) {
         var worker = new Worker(workerUrl);
@@ -8,7 +10,7 @@ module.exports = function (workerUrl, canvas, listener) {
                 canvas: offscreen,
                 width: canvas.clientWidth,
                 height: canvas.clientHeight,
-                devicePixelRatio: 1,
+                devicePixelRatio: getDevicePixelRatio(),
             },
             [offscreen]
         );
@@ -40,7 +42,7 @@ module.exports = function (workerUrl, canvas, listener) {
                 canvas: canvas,
                 width: canvas.clientWidth,
                 height: canvas.clientHeight,
-                devicePixelRatio: window.devicePixelRatio || 1,
+                devicePixelRatio: getDevicePixelRatio(),
             });
         };
 

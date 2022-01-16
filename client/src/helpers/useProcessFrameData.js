@@ -43,10 +43,10 @@ export async function useProcessFrameData(
     }, 500);
 
     function getNodeDimensionsFromCache(node) {
-        // if (dimensionsCache.has(node)) return dimensionsCache.get(node);
+        if (dimensionsCache.has(node)) return dimensionsCache.get(node);
         // ignore scroll pos = true
         const dimensions = getElementDimensions(node, false);
-        // dimensionsCache.set(node, dimensions);
+        dimensionsCache.set(node, dimensions);
         return dimensions;
     }
 
@@ -147,11 +147,12 @@ export async function useProcessFrameData(
                 },
             ];
         _onFrameLoading(true, _fromFrameNumber, _toFrameNumber - 1);
-        const frames = await getFrames(
-            _resourceId,
-            _fromFrameNumber,
-            _toFrameNumber
-        );
+        let frames;
+
+        frames =
+            (await getFrames(_resourceId, _fromFrameNumber, _toFrameNumber)) ||
+            [];
+
         _onFrameLoading(false);
         // ToDo: maybe use map statement
         // _onFrameProcessing(true, index, length);
@@ -180,5 +181,6 @@ export async function useProcessFrameData(
     return {
         getFrames: get,
         getLastFrameNumber,
+        clearDimensionsCache,
     };
 }

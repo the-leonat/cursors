@@ -58,11 +58,8 @@
     {/if}
 
     <DebugInfo show={showDebugInfo} />
-    <p>
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
-        fuga mollitia aliquam dolore inventore doloribus tempore, aut illo enim
-        quia expedita natus incidunt, quae nemo temporibus, id et perferendis?
-    </p>
+    <h3>What is this?</h3>
+    <p>The web is like</p>
 
     <label>
         <input type="checkbox" bind:checked={showDebugInfo} />
@@ -85,6 +82,7 @@
     div {
         font-size: 16px;
         color: black;
+        white-space: normal;
         overflow-y: scroll;
         transition: transform 0.2s;
         transform: translate(80%, 80%);

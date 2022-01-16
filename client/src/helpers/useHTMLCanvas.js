@@ -1,6 +1,7 @@
 import fastdom from "fastdom";
 import useDeferedCallback from "./useDeferedCallback";
 import getDocumentHeight from "./getDocumentHeight";
+import { getDevicePixelRatio } from "../config";
 
 export async function useHTMLCanvas(handleCanvasResize) {
     const canvas = document.createElement("canvas");
@@ -21,9 +22,8 @@ export async function useHTMLCanvas(handleCanvasResize) {
     function adjustCanvasSize(initial = false) {
         return new Promise((resolve) => {
             fastdom.measure(() => {
-                const pixelRatio = 1;
-                const width = document.body.offsetWidth * pixelRatio;
-                const height = getDocumentHeight() * pixelRatio;
+                const width = document.body.offsetWidth * getDevicePixelRatio();
+                const height = getDocumentHeight() * getDevicePixelRatio();
                 if (!initial) handleCanvasResize(width, height);
                 else {
                     canvas.width = width;
