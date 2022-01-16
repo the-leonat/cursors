@@ -83,7 +83,7 @@ export async function useProcessFrameData(
         );
         const node = frames.singleNodeValue;
         if (!node) {
-            console.debug("node not found for xpath", xPath);
+            // console.debug("node not found for xpath", xPath);
             return undefined;
         }
         nodeCache.set(xPath, node);
@@ -145,7 +145,7 @@ export async function useProcessFrameData(
                     entries: [],
                 },
             ];
-        _onFrameLoading(true, _fromFrameNumber, _toFrameNumber);
+        _onFrameLoading(true, _fromFrameNumber, _toFrameNumber - 1);
         const frames = await getFrames(
             _resourceId,
             _fromFrameNumber,
