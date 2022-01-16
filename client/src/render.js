@@ -14,6 +14,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
     } = useRequestFrameData(handleRequestFrames);
     const {
         start: startRender,
+        reset,
         stop,
         initialize,
         getCurrentFrameNumber,
@@ -68,6 +69,8 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             resizeCanvas(width, height);
         } else if (_event.data.type === "stop") {
             stop();
+        } else if (_event.data.type === "reset") {
+            reset();
         } else if (_event.data.type === "start") {
             const frameNumber = getCurrentFrameNumber();
             startRequest(frameNumber);

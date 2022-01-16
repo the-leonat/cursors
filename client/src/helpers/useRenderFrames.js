@@ -132,9 +132,16 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         // clearCanvas();
     }
 
+    function reset() {
+        stop();
+        currentFrameNumber = 0;
+        start();
+    }
+
     return {
         start,
         stop,
+        reset,
         getFPS,
         initialize,
         resizeCanvas,
