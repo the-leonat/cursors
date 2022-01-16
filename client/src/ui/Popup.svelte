@@ -4,7 +4,7 @@
     import DebugInfo from "./DebugInfo.svelte";
     import { dataStore } from "../ui/store";
     import cursorImage2XUrlData from "data-url:../../assets/cursor-small_2x.png";
-    export let handleStart, handleStop;
+    export let handleStart, handleStop, handleReset;
 
     let visible = false;
     let showDebugInfo = false;
@@ -33,6 +33,11 @@
             handleStop();
         }
     }
+
+    function handleResetThis() {
+        $dataStore.isRunning = false;
+        handleReset();
+    }
 </script>
 
 <div
@@ -48,6 +53,8 @@
     <button on:click={handleClick}
         >{$dataStore.isRunning ? "Pause" : "Start"}</button
     >
+    <button on:click={handleResetThis}>Reset</button>
+
     <DebugInfo show={showDebugInfo} />
     <p>
         Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sunt minus
@@ -62,6 +69,10 @@
 </div>
 
 <style>
+    :host {
+        font-size: 16px;
+        color: black;
+    }
     p {
         font-weight: 100;
     }

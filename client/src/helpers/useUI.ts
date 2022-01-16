@@ -21,7 +21,11 @@ import Popup from "../ui/Popup.svelte";
 // x buffer size == frames per second (usually 1) times buffer time (10)
 // IMPORTANT soft navigation between pages reset data structures
 
-export function useUI(handleStart: () => void, handleStop: () => void) {
+export function useUI(
+    handleStart: () => void,
+    handleStop: () => void,
+    handleReset: () => void
+) {
     function updateData(_data: Partial<UIData>) {
         dataStore.update((currentData) => ({
             isRunning:
@@ -55,6 +59,7 @@ export function useUI(handleStart: () => void, handleStop: () => void) {
         props: {
             handleStart,
             handleStop,
+            handleReset,
         },
     });
 
