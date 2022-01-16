@@ -133,7 +133,6 @@ export default function trackCursor(onCursorTrack) {
                 persistedFrameNumber += 1;
                 lastMousePositionX = absX;
                 lastMousePositionY = absY;
-                console.log(frameNumber, xPath);
                 persist({
                     user_id: userId,
                     resource_id: resourceId,
