@@ -19,18 +19,34 @@ export function useRequestFrameData(handleRequestFrames) {
 
     function handleIncomingFrames(data) {
         const { frames } = data;
+        if (!frames || frames.length === 0) {
+            console.debug("empty frame array");
+            return;
+        }
+        const firstFrame = frames[0];
+        const lastFrame = frames[frames.length - 1];
+
+        // check if incoming data is wanted
+        if (firstFrame.number !== highestLoadedFrameNumber) {
+            console.debug(
+                "requested frame does not match wanted",
+                firstFrame.number,
+                highestLoadedFrameNumber
+            );
+            return;
+        }
+
+        // push frames on the buffer
         frames.forEach((frame) => {
             frameBuffer.push(frame);
         });
-        const firstFrame = frameBuffer.peekFirst();
-        const lastFrame = frameBuffer.peekLast();
 
         if (firstFrame && lastFrame) {
             // console.log(
             //     `now in buffer frames ${firstFrame.number}-${lastFrame.number}`
             // );
             const { last } = lastFrame;
-            highestLoadedFrameNumber = lastFrame.number + 1;
+            highestLoadedFrameNumber = lastFrame.number;
             if (last) {
                 console.log("last frame loaded");
                 unscheduleNextFrameRequest();
@@ -58,7 +74,7 @@ export function useRequestFrameData(handleRequestFrames) {
         const emptyBufferSize = frameBufferCapacity - frameBuffer.size;
         if (emptyBufferSize > frameBufferCapacity * 0.25) {
             const from = highestLoadedFrameNumber;
-            const to = highestLoadedFrameNumber + emptyBufferSize;
+            const to = highestLoadedFrameNumber + emptyBufferSize + 1;
             handleRequestFrames(from, to);
         } else {
             scheduleNextFrameRequest();
