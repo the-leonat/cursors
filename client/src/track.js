@@ -44,8 +44,10 @@ function useClock(tick, interval) {
 
 export function useResourceId() {
     // TODO: add nonce
+    // const nonce = "7504103422";
+    const nonce = "";
     function hash() {
-        return sha256(window.location.href || "").toString();
+        return sha256((window.location.href || "") + nonce).toString();
     }
     let resourceId = hash();
     let changed = false;
@@ -101,8 +103,8 @@ export default function trackCursor(onCursorTrack) {
     const { getUserId, reset: resetUserId } = useUserId();
     const getResourceId = useResourceId();
     const { persist, flush } = useBufferedPersist(3 * 4);
-    const generateFakeData = useCreateFakeData();
-    const fakedata = generateFakeData(getResourceId().resourceId, 500, 20);
+    // const generateFakeData = useCreateFakeData();
+    // const fakedata = generateFakeData(getResourceId().resourceId, 500, 20);
     // persist(...fakedata);
     let frameNumber = 0;
     let persistedFrameNumber = 0;

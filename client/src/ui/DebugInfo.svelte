@@ -10,7 +10,8 @@
             Cursorcount: {$dataStore.render.currentCursorCount}<br />
             FPS: {($dataStore.render?.fps || 0).toFixed()}<br />
             Render frame {$dataStore.render.currentFrameNumber}/{$dataStore
-                .render.highestLoadedFrameNumber}<br />
+                .render.highestLoadedFrameNumber}/{$dataStore.render
+                .lastFrameNumber}<br />
             {$dataStore.loading?.isLoading ? "Loading" : "Last Loaded"} frames {$dataStore
                 .loading?.from}/{$dataStore.loading?.to}<br />
             Tracked frame {$dataStore.track.persistedFrameNumber}/{$dataStore

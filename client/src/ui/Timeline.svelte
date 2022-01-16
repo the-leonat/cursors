@@ -16,14 +16,18 @@
 
 <div class="timeline">
     <slot name="icon" />
-    <div
-        class="line"
-        style={`--timeline-current: ${timelineCurrent}; --timeline-loaded-to: ${timelineLoadedTo}`}
-    >
-        <span class="buffered" />
-        <span class="tick" />
-    </div>
-    <div class="timelabel">{timeStringCurrent}/{timeStringTo}</div>
+    {#if frameTo < 15 * TRACKING_FPS}
+        No one else was here before you.
+    {:else}
+        <div
+            class="line"
+            style={`--timeline-current: ${timelineCurrent}; --timeline-loaded-to: ${timelineLoadedTo}`}
+        >
+            <span class="buffered" />
+            <span class="tick" />
+        </div>
+        <div class="timelabel">{timeStringCurrent}/{timeStringTo}</div>
+    {/if}
 </div>
 
 <style>

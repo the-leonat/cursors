@@ -53,7 +53,9 @@
     <button on:click={handleClick}
         >{$dataStore.isRunning ? "Pause" : "Start"}</button
     >
-    <button on:click={handleResetThis}>Reset</button>
+    {#if showDebugInfo}
+        <button on:click={handleResetThis}>Reset</button>
+    {/if}
 
     <DebugInfo show={showDebugInfo} />
     <p>
@@ -69,15 +71,11 @@
 </div>
 
 <style>
-    :host {
-        font-size: 16px;
-        color: black;
-    }
     p {
         font-weight: 100;
     }
     img {
-        width: 1.5em;
+        width: 1.2em;
         margin-right: 0.5em;
         transform: scale(-1, 1);
     }
@@ -85,6 +83,9 @@
         transform: translate(0%, 0%);
     }
     div {
+        font-size: 16px;
+        color: black;
+        overflow-y: scroll;
         transition: transform 0.2s;
         transform: translate(80%, 80%);
         position: fixed;
@@ -94,7 +95,7 @@
         min-height: 30vh;
         max-height: 50vh;
         z-index: 9999;
-        background-color: rgba(175, 246, 255, 0.5);
+        background-color: rgba(200, 200, 200, 0.5);
         backdrop-filter: blur(10px);
         /* border: 1px solid rgba(0, 0, 0, 0.1); */
         box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.2);

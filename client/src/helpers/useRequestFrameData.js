@@ -4,7 +4,6 @@ import { TRACKING_FPS } from "../config";
 export function useRequestFrameData(handleRequestFrames) {
     const bufferSizeInSeconds = 15;
     const frameBufferCapacity = TRACKING_FPS * bufferSizeInSeconds;
-    console.log(frameBufferCapacity);
     const frameBuffer = new CircularBuffer(Array, frameBufferCapacity);
     let currentTimeoutId = null;
     let highestLoadedFrameNumber = 0;

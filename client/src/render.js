@@ -67,6 +67,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             const { canvas, devicePixelRatio } = _event.data;
             initialize(canvas, devicePixelRatio);
         } else if (_event.data.type === "resize") {
+            console.log("resize");
             const { width, height } = _event.data;
             const frameNumber = getCurrentFrameNumber();
             resetFrameBuffer(frameNumber);
@@ -76,8 +77,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         } else if (_event.data.type === "reset") {
             handleReset();
         } else if (_event.data.type === "start") {
-            const frameNumber = getCurrentFrameNumber();
-            startRequest(frameNumber);
+            startRequest();
             startRender();
         } else {
             throw "unrecognized event";

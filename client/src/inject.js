@@ -6,8 +6,9 @@ import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
 import workerUrl from "data-url:./render.js";
 import trackCursor from "./track";
 import Visibility from "visibilityjs";
+import { TRACKING_FPS } from "./config";
 
-const AUTOSTART = process.env.SILENT !== undefined;
+const AUTOSTART = true || process.env.SILENT !== undefined;
 
 const run = async function () {
     if (window.injected) {
@@ -100,19 +101,29 @@ const run = async function () {
     }
 
     function handleStop() {
-        console.log("stopped");
         worker.post({
             type: "stop",
         });
         stopTracking();
+        updateUIState({
+            isRunning: false,
+        });
     }
 
     function handleStart() {
-        console.log("started");
-        worker.post({
-            type: "start",
-        });
+        let started = false;
+
+        // if more then a minute of data start
+        if (getLastFrameNumber() > 15 * TRACKING_FPS) {
+            worker.post({
+                type: "start",
+            });
+            started = true;
+        }
         startTracking();
+        updateUIState({
+            isRunning: started,
+        });
     }
 
     function handleReset() {
@@ -122,18 +133,14 @@ const run = async function () {
         stopTracking();
     }
 
-    function start() {
-        updateUIState({
-            isRunning: true,
+    function handleInitialized() {
+        if (AUTOSTART) {
+            if (Visibility.state() === "visible") handleStart();
+        }
+        Visibility.change((e, state) => {
+            if (state === "hidden") handleStop();
+            else if (state === "visible") handleStart();
         });
-        handleStart();
-    }
-
-    function stop() {
-        updateUIState({
-            isRunning: false,
-        });
-        handleStop();
     }
 
     async function handleFramesRequest(_eventData) {
@@ -152,14 +159,7 @@ const run = async function () {
     function handleWorkerEvent(_event) {
         // console.log("mainthread event", _event)
         if (_event.data.type === "initialized") {
-            if (AUTOSTART) {
-                if (Visibility.state() === "visible") start();
-            }
-            Visibility.change((e, state) => {
-                if (state === "hidden") stop();
-                else if (state === "visible") start();
-            });
-            // handleInitialized();
+            handleInitialized();
         } else if (_event.data.type === "frames") {
             handleFramesRequest(_event.data);
         } else if ((_event.data.type = "currentFrame")) {
