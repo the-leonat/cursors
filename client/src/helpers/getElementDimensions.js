@@ -1,11 +1,17 @@
+import { get_binding_group_value } from "svelte/internal";
+
 export default function getElementDimensions(el, ignoreScrollPosition = false) {
-    // Todo: implement cache
-    const rect = el.getBoundingClientRect(),
-        scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
-        scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    getTop = (_el) =>
+        _el.offsetTop + (_el.offsetParent && getTop(_el.offsetParent));
+    getLeft = (_el) =>
+        _el.offsetLeft + (_el.offsetParent && getLeft(_el.offsetParent));
+    const rect = el.getBoundingClientRect();
+    // scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+    // scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    // const scrollLeft =
     return {
-        top: ignoreScrollPosition ? rect.top : rect.top + scrollTop,
-        left: ignoreScrollPosition ? rect.left : rect.left + scrollLeft,
+        top: getTop(el),
+        left: getLeft(el),
         width: rect.width,
         height: rect.height || 1,
     };

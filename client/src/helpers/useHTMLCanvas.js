@@ -4,11 +4,11 @@ import getDocumentHeight from "./getDocumentHeight";
 
 export async function useHTMLCanvas(handleCanvasResize) {
     const canvas = document.createElement("canvas");
-    canvas.style.position = "absolute";
+    canvas.style.position = "fixed";
     canvas.style.top = 0;
     canvas.style.right = 0;
     canvas.style.width = "100vw";
-    canvas.style.minHeight = "100%";
+    canvas.style.height = "100vh";
     canvas.style.pointerEvents = "none";
     canvas.style.zIndex = 9998;
     // canvas.style.opacity = 0.8;
@@ -21,7 +21,7 @@ export async function useHTMLCanvas(handleCanvasResize) {
     function adjustCanvasSize(initial = false) {
         return new Promise((resolve) => {
             fastdom.measure(() => {
-                const pixelRatio = window.devicePixelRatio || 1;
+                const pixelRatio = 1;
                 const width = document.body.offsetWidth * pixelRatio;
                 const height = getDocumentHeight() * pixelRatio;
                 if (!initial) handleCanvasResize(width, height);
@@ -44,6 +44,7 @@ export async function useHTMLCanvas(handleCanvasResize) {
         });
         adjustCanvasSizeDefered();
     }
+    // add height resizer
     window.addEventListener("resize", adjustCanvasOnResize);
     await adjustCanvasSize(true);
     return canvas;

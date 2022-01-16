@@ -43,9 +43,10 @@ export async function useProcessFrameData(
     }, 500);
 
     function getNodeDimensionsFromCache(node) {
-        if (dimensionsCache.has(node)) return dimensionsCache.get(node);
+        // if (dimensionsCache.has(node)) return dimensionsCache.get(node);
+        // ignore scroll pos = true
         const dimensions = getElementDimensions(node, false);
-        dimensionsCache.set(node, dimensions);
+        // dimensionsCache.set(node, dimensions);
         return dimensions;
     }
 

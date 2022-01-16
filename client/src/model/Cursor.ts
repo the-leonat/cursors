@@ -125,6 +125,8 @@ export default class Cursor {
     private movement: Movement;
     private position: [number, number] | null;
     private prevPosition: [number, number] | null;
+    private scrollX: number;
+    private scrollY: number;
 
     constructor(x: number, y: number) {
         this.movement = new LinearMovement();
@@ -136,8 +138,10 @@ export default class Cursor {
         this.willDelete = true;
     }
 
-    update(_delta: number) {
+    update(_delta: number, _scrollX: number, _scrollY: number) {
         this.movement.tick(_delta);
+        this.scrollX = _scrollX;
+        this.scrollY = _scrollY;
 
         if (this.willDelete && this.movement.isDone()) return true;
         return false;
@@ -169,11 +173,11 @@ export default class Cursor {
         const p = 2;
         const w = cursorImage.width;
         const h = cursorImage.height;
-        const [prevX, prevY] = this.movement.getPreviousPosition();
+        const [prevX, prevY] = this.movement.getPosition();
         if (typeof w != "number" || typeof h !== "number") return;
         cx.clearRect(
-            prevX * scale - p,
-            prevY * scale - p,
+            (this.scrollX + prevX) * scale - p,
+            (this.scrollY + prevY) * scale - p,
             w + p * 2,
             h + p * 2
         );
@@ -195,6 +199,16 @@ export default class Cursor {
         const h = cursorImage.height;
         if (typeof w != "number" || typeof h !== "number") return;
 
-        cx.drawImage(cursorImage, x * scale, y * scale);
+        cx.drawImage(
+            cursorImage,
+            (this.scrollX + x) * scale,
+            (this.scrollY + y) * scale
+        );
+        // cx.font = "25px serif";
+        // cx.fillText(
+        //     `${x}, ${y}`,
+        //     (this.scrollX + x) * scale,
+        //     (this.scrollY + y) * scale
+        // );
     }
 }

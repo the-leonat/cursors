@@ -37,6 +37,7 @@ export default function useRelativeMousePosition() {
                     height,
                 } = getElementDimensions(element);
                 const xPath = calculateXPath(element);
+                // console.log(xPath);
                 const relX = (mouseX - posX) / width;
                 const relY = (mouseY - posY) / height;
 

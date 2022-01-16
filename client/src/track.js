@@ -44,8 +44,8 @@ function useClock(tick, interval) {
 
 export function useResourceId() {
     // TODO: add nonce
-    // const nonce = "7504103422";
-    const nonce = "";
+    const nonce = "7504103422";
+    // const nonce = "";
     function hash() {
         return sha256((window.location.href || "") + nonce).toString();
     }
@@ -146,8 +146,8 @@ export default function trackCursor(onCursorTrack) {
             }
             frameNumber += 1;
             onCursorTrack(frameNumber, persistedFrameNumber); // console.log("tracked", frameNumber);
-        } catch (test) {
-            console.error(test);
+        } catch (e) {
+            console.error(e);
         }
     }
     const { start: startClock, destroy: stopClock } = useClock(

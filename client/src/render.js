@@ -20,6 +20,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         getCurrentCursorCount,
         resizeCanvas,
         getFPS,
+        updateScrollPosition,
     } = useRenderFrames(handleGetNextFrame, handleInitialized);
 
     function handleRequestFrames(_from, _to) {
@@ -72,6 +73,10 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             const frameNumber = getCurrentFrameNumber();
             resetFrameBuffer(frameNumber);
             resizeCanvas(width, height);
+        } else if (_event.data.type === "documentResize") {
+            console.log("doc resize");
+            const frameNumber = getCurrentFrameNumber();
+            resetFrameBuffer(frameNumber);
         } else if (_event.data.type === "stop") {
             stop();
         } else if (_event.data.type === "reset") {
@@ -79,6 +84,8 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         } else if (_event.data.type === "start") {
             startRequest();
             startRender();
+        } else if (_event.data.type === "scroll") {
+            updateScrollPosition(_event.data.scrollX, _event.data.scrollY);
         } else {
             throw "unrecognized event";
         }

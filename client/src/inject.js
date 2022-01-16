@@ -1,12 +1,15 @@
 import { useResourceId } from "./track";
 import createWorker from "./lib/createWorker";
 import { useUI } from "./helpers/useUI";
+import { useFirstDeferedCallback } from "./helpers/useDeferedCallback";
+
 import { useProcessFrameData } from "./helpers/useProcessFrameData";
 import { useHTMLCanvas } from "./helpers/useHTMLCanvas";
 import workerUrl from "data-url:./render.js";
 import trackCursor from "./track";
 import Visibility from "visibilityjs";
 import { TRACKING_FPS } from "./config";
+import fastdom from "fastdom";
 
 const AUTOSTART = true || process.env.SILENT !== undefined;
 
@@ -133,6 +136,12 @@ const run = async function () {
         stopTracking();
     }
 
+    function handleDocumentResize() {
+        worker.post({
+            type: "documentResize",
+        });
+    }
+
     function handleInitialized() {
         if (AUTOSTART) {
             if (Visibility.state() === "visible") handleStart();
@@ -141,6 +150,19 @@ const run = async function () {
             if (state === "hidden") handleStop();
             else if (state === "visible") handleStart();
         });
+        document.addEventListener("scroll", function (e) {
+            // window.requestAnimationFrame(function () {
+            worker.post({
+                type: "scroll",
+                scrollY: -window.scrollY,
+                scrollX: -window.scrollX,
+            });
+            // });
+        });
+        const onDocResize = useFirstDeferedCallback(handleDocumentResize, 200);
+        const resizeObserver = new ResizeObserver((entries) => onDocResize());
+        // start observing a DOM node
+        resizeObserver.observe(document.body);
     }
 
     async function handleFramesRequest(_eventData) {

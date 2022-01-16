@@ -37,15 +37,16 @@ export function useRenderFrames(getNextFrame, onInitialized) {
     let canvas;
     let stopNextFrame = false;
     let fps = 0;
+    let scrollX = 0;
+    let scrollY = 0;
 
     const { start: startAnimation, stop: stopAnimation } = useAnimationLoop(
         (delta, cx) => {
             // we need to await until this is resolved
             if (!cursorCanvas) return;
             cursorMap.forEach((cursor, cursorId) => {
-                const shouldDelete = cursor.update(delta);
                 cursor.renderClearCanvas(cx, cursorCanvas, devicePixelRatio);
-
+                const shouldDelete = cursor.update(delta, scrollX, scrollY);
                 if (shouldDelete) {
                     cursorMap.delete(cursorId);
                 }
@@ -111,6 +112,11 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         onInitialized();
     }
 
+    function updateScrollPosition(_scrollX, _scrollY) {
+        scrollX = _scrollX;
+        scrollY = _scrollY;
+    }
+
     function start() {
         if (!canvas) {
             throw "canvas is not set!";
@@ -140,5 +146,6 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         resizeCanvas,
         getCurrentFrameNumber,
         getCurrentCursorCount,
+        updateScrollPosition,
     };
 }
