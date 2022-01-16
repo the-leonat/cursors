@@ -14,7 +14,6 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
     } = useRequestFrameData(handleRequestFrames);
     const {
         start: startRender,
-        reset,
         stop,
         initialize,
         getCurrentFrameNumber,
@@ -39,6 +38,11 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         });
     }
 
+    function handleReset() {
+        stop();
+        resetFrameBuffer(0);
+    }
+
     function handleGetNextFrame() {
         const frame = getFrame();
         if (!frame) return;
@@ -46,7 +50,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         worker.post({
             type: "currentFrame",
             currentFrameNumber: number,
-            highestLoadedFrameNumber: getHighestLoadedFrameNumber() - 1,
+            highestLoadedFrameNumber: getHighestLoadedFrameNumber(),
             fps: getFPS(),
             currentCursorCount: getCurrentCursorCount(),
         });
@@ -70,7 +74,7 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
         } else if (_event.data.type === "stop") {
             stop();
         } else if (_event.data.type === "reset") {
-            reset();
+            handleReset();
         } else if (_event.data.type === "start") {
             const frameNumber = getCurrentFrameNumber();
             startRequest(frameNumber);

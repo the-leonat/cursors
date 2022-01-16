@@ -15,7 +15,11 @@ const run = async function () {
         return;
     }
     window.injected = true;
-    const { updateData: updateUIState } = useUI(handleStart, handleStop);
+    const { updateData: updateUIState } = useUI(
+        handleStart,
+        handleStop,
+        handleReset
+    );
     const { start: startTracking, stop: stopTracking } =
         trackCursor(handleCursorTracked);
     const getResourceId = useResourceId();
@@ -27,7 +31,12 @@ const run = async function () {
         handleFrameLoading
     );
     const canvas = await useHTMLCanvas(handleCanvasResize);
-    const worker = createWorker(workerUrl, canvas, handleWorkerEvent);
+    let worker;
+    try {
+        worker = createWorker(workerUrl, canvas, handleWorkerEvent);
+    } catch (e) {
+        console.log("failed");
+    }
 
     function handleFrameInfoLoaded(_frameCount) {
         updateUIState({
@@ -104,6 +113,13 @@ const run = async function () {
             type: "start",
         });
         startTracking();
+    }
+
+    function handleReset() {
+        worker.post({
+            type: "reset",
+        });
+        stopTracking();
     }
 
     function start() {

@@ -67,7 +67,7 @@ export function useRenderFrames(getNextFrame, onInitialized) {
                 stopAnimation();
                 return;
             }
-            const nextFrame = getNextFrame(currentFrameNumber);
+            const nextFrame = getNextFrame();
             if (!nextFrame) return;
             const { last, entries, number } = nextFrame;
             currentFrameNumber = number;
@@ -132,16 +132,9 @@ export function useRenderFrames(getNextFrame, onInitialized) {
         // clearCanvas();
     }
 
-    function reset() {
-        stop();
-        currentFrameNumber = 0;
-        start();
-    }
-
     return {
         start,
         stop,
-        reset,
         getFPS,
         initialize,
         resizeCanvas,
