@@ -14,11 +14,13 @@
     "devDependencies": {
         "@parcel/optimizer-data-url": "^2.0.1",
         "@parcel/reporter-bundle-analyzer": "^2.0.0-nightly.2087",
-        "@parcel/transformer-inline-string": "^2.0.1",
+        "@parcel/transformer-inline-string": "^2.2.0",
+        "autoprefixer": "^10.4.2",
         "lib": "^4.3.3",
-        "parcel": "^2.0.1",
+        "parcel": "^2.2.0",
         "parcel-reporter-static-files-copy": "github:Drecu/parcel-reporter-static-files-copy",
-        "parcel-transformer-svelte": "^1.2.3"
+        "parcel-transformer-svelte": "github:orlov-vo/parcel-transformer-svelte#pull/24",
+        "postcss": "^8.4.5"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
@@ -40,7 +42,7 @@
             "distDir": "dist",
             "sourceMap": true,
             "engines": {
-                "browsers": "last 2 Chrome versions",
+                "browsers": "> 1%",
                 "optimize": "true",
                 "context": "browser"
             }

@@ -18,6 +18,18 @@ if (typeof window !== "undefined" && !window.OffscreenCanvas) {
     };
 }
 
+if (!("createImageBitmap" in window)) {
+    window.createImageBitmap = async function (blob) {
+        return new Promise((resolve, reject) => {
+            let img = document.createElement("img");
+            img.addEventListener("load", function () {
+                resolve(this);
+            });
+            img.src = URL.createObjectURL(blob);
+        });
+    };
+}
+
 export default async function createCursorCanvas(imageUrlData) {
     const offscreenCanvas = new OffscreenCanvas(1, 1);
     const imageData = await fetch(imageUrlData).then((res) => res.blob());

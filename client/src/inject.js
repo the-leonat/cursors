@@ -209,7 +209,7 @@ const NS_INJECTED = "leonat-cursors-injected";
 
 console.log("autostart", AUTOSTART);
 
-if (!isMobile()) {
+if (true || true || !isMobile()) {
     if (!document.body.hasAttribute(NS_INJECTED)) {
         document.body.setAttribute(NS_INJECTED, true);
         console.debug("cursors already running");

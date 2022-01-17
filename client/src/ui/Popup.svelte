@@ -87,8 +87,8 @@
         transition: transform 0.2s;
         transform: translate(80%, 80%);
         position: fixed;
-        bottom: 2px;
-        right: 2px;
+        bottom: 0px;
+        right: 0px;
         max-width: 40vw;
         min-height: 30vh;
         max-height: 50vh;
