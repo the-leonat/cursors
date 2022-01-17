@@ -47,7 +47,10 @@ export function useResourceId() {
     const nonce = "7504103422";
     // const nonce = "";
     function hash() {
-        return sha256((window.location.href || "") + nonce).toString();
+        let url = window.location.href;
+        const index = url.indexOf("#");
+        url = url.substring(0, index > 0 ? index : url.length);
+        return sha256((url || "") + nonce).toString();
     }
     let resourceId = hash();
     let changed = false;

@@ -16,7 +16,7 @@ export async function useHTMLCanvas(handleCanvasResize) {
     // canvas.style.mixBlendMode = "luminosity";
     document.documentElement.style.height = "100%";
     // document.body.style.position = "relative";
-    document.body.style.minHeight = "100%";
+    // document.body.style.minHeight = "100%";
     document.body.appendChild(canvas);
 
     function adjustCanvasSize(initial = false) {

@@ -1,0 +1,201 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <link rel="stylesheet" href="plugin/inject.css" type="text/css" />
+        <style>
+            @font-face {
+                font-family: "IA";
+                src: url("fonts/iAWriterQuattroV.ttf");
+                font-style: normal;
+            }
+
+            @font-face {
+                font-family: "IA";
+                src: url("fonts/iAWriterQuattroV-Italic.ttf");
+                font-style: italic;
+            }
+
+            body {
+                padding: 2em 1em;
+                font-size: clamp(18px, 2.4vw, 22px);
+                margin: 0;
+                /* background-color: #141414; */
+                color: #141414;
+                font-family: "IA";
+                text-rendering: optimizeLegibility;
+                -webkit-font-smoothing: antialiased;
+                font-variation-settings: "wght" 400, "SPCG" 0;
+            }
+
+            content {
+                line-height: 1.7em;
+            }
+
+            b,
+            strong {
+                font-weight: 500;
+                font-variation-settings: "wght" 500;
+            }
+
+            p,
+            ol,
+            ul,
+            pre {
+                margin-block: 0 1.5em;
+            }
+
+            p.nm {
+                margin-block: 0 1em;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                text-transform: uppercase;
+                font-style: italic;
+                margin-block: 0 1em;
+                font-weight: 600;
+                font-variation-settings: "wght" 600, "SPCG" 10;
+            }
+
+            h2 {
+                font-size: 1.1em;
+                margin-block: 0 0.2em;
+                color: black;
+                font-weight: 550;
+                font-variation-settings: "wght" 550, "SPCG" 0;
+            }
+
+            a,
+            a:visited {
+                font-style: italic;
+                color: inherit;
+            }
+
+            a:hover {
+                cursor: var(--src, pointer);
+                /* cursor: url(images/svdm.png), auto; */
+            }
+
+            button {
+                font-family: inherit;
+                font-size: 1em;
+                /* border-width: 2px; */
+                /* border-radius: 2em; */
+            }
+
+            code,
+            pre {
+                font-family: inherit;
+                background: aliceblue;
+            }
+
+            pre {
+                padding: 0.5em;
+                overflow-x: scroll;
+            }
+
+            form {
+                margin: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Cursors</h1>
+        <content>
+            <p>
+                Cursors is a program to visualize historic browsing data. It
+                anonymously records all cursors on a website and displays them
+                as an overlay to the user.
+            </p>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+                Voluptatibus voluptates ab eveniet aut, natus repudiandae?
+                Consequuntur ut, quasi at molestias, assumenda debitis minima
+                aliquam molestiae et, temporibus neque incidunt voluptas. Lorem
+                ipsum dolor sit amet consectetur adipisicing elit. Iure impedit
+                minima nisi rem vel eos delectus doloremque corrupti vitae
+                numquam autem, dolorum, quas ut atque sunt odio quis
+                voluptatibus facilis.
+            </p>
+            <h2>Install the chrome extension</h2>
+            <p>
+                The chrome extension is not published to the webstore yet. Until
+                now you can download an unpacked version of it and install it
+                manually.
+            </p>
+            <ol>
+                <li>
+                    <form
+                        action="cursor-extension.zip"
+                        method="get"
+                        target="_blank"
+                    >
+                        <button type="submit">
+                            Download the chrome extension
+                        </button>
+                    </form>
+                </li>
+                <li>
+                    Open the Extension Management page by navigating to
+                    <code>chrome://extensions</code>.
+                    <ul>
+                        <li>
+                            Alternatively, open this page by clicking on the
+                            Extensions menu button and selecting
+                            <strong>Manage Extensions</strong> at the bottom of
+                            the menu.
+                        </li>
+                        <li>
+                            Alternatively, open this page by clicking on the
+                            Chrome menu, hovering over
+                            <strong>More Tools</strong> then selecting
+                            <strong>Extensions</strong>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    Enable Developer Mode by clicking the toggle switch next to
+                    <strong>Developer mode</strong>.
+                </li>
+                <li>
+                    Click the <strong>Load unpacked</strong> button and select
+                    the extension directory.
+                </li>
+            </ol>
+            <p>
+                After clicking the cursor icon the extension will activate in
+                the current tab and will stay there until you browse to another
+                domain.
+            </p>
+            <h2>Embed the script in your website</h2>
+            <p></p>
+            <pre>
+&lt;script&gt;
+    window.lcow = 1;
+&lt;/script&gt;
+&lt;script async src=&quot;http://cursors.by.leonat.de/plugin.js&quot;&gt;&lt;/script&gt;</pre
+            >
+
+            <h2>A note on data privacy</h2>
+            <p class="nm">
+                The plugin records cursor data and sends it securly to a remote
+                server. Because of that precautions have been taken:
+            </p>
+            <ul>
+                <li>The User ID is randomized for every session</li>
+                <li>
+                    Website urls are hashed so cursor data and website url can't
+                    me connected from the database side.
+                </li>
+            </ul>
+        </content>
+
+        <script>
+            window.lcow = 1;
+        </script>
+        <script async src="crsrs.js"></script>
+    </body>
+</html>
