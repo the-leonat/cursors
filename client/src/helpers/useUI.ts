@@ -1,5 +1,4 @@
 import { dataStore, UIData } from "../ui/store";
-// @ts-expect-error
 import Popup from "../ui/Popup.svelte";
 
 // todo convert to typescript

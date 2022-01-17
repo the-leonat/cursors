@@ -12,12 +12,14 @@
     $: timeCurrent = frameCurrent / TRACKING_FPS;
     $: secondsCurrent = `${Math.round(timeCurrent % 60)}`.padStart(2, "0");
     $: timeStringCurrent = `${Math.floor(timeCurrent / 60)}:${secondsCurrent}`;
+
+    $: noCursorsToDisplay = frameTo < 15 * TRACKING_FPS;
 </script>
 
-<div class="timeline">
+<div class={`timeline ${!noCursorsToDisplay && "sticky"}`}>
     <slot name="icon" />
-    {#if frameTo < 15 * TRACKING_FPS}
-        No one else was here before you.
+    {#if noCursorsToDisplay}
+        You are the first!
     {:else}
         <div
             class="line"
@@ -37,6 +39,11 @@
         flex-direction: row;
         align-items: center;
         margin-bottom: 0.5em;
+    }
+
+    .timeline.sticky {
+        position: sticky;
+        top: 0px;
     }
 
     .tick {

@@ -18,7 +18,7 @@ if (typeof window !== "undefined" && !window.OffscreenCanvas) {
     };
 }
 
-if (!("createImageBitmap" in window)) {
+if (typeof window !== "undefined" && !("createImageBitmap" in window)) {
     window.createImageBitmap = async function (blob) {
         return new Promise((resolve, reject) => {
             let img = document.createElement("img");

@@ -87,7 +87,10 @@ import { useRenderFrames } from "./helpers/useRenderFrames";
             startRequest();
             startRender();
         } else if (_event.data.type === "scroll") {
-            updateScrollPosition(_event.data.scrollX, _event.data.scrollY);
+            updateScrollPosition(
+                Math.round(_event.data.scrollX),
+                Math.round(_event.data.scrollY)
+            );
         } else {
             throw "unrecognized event";
         }
